@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const expressValidator = require('express-validator');
 const path = require("path");
+const textflow = require("textflow.js");
 
 // config dotenv
 require('dotenv').config({
@@ -18,9 +19,12 @@ const userRoutes = require('./routes/user');
 const categoryRoutes = require('./routes/category');
 const productRoutes = require('./routes/product');
 const orderRoutes = require('./routes/order')
+const sellerRoutes = require('./routes/seller');
+
 
 // express app
 const app = express();
+textflow.useKey(process.env.YOUR_API_KEY);
 
 // database connection
 mongoose.connect(process.env.DATABASE, {
@@ -28,6 +32,7 @@ mongoose.connect(process.env.DATABASE, {
     useCreateIndex: true,
     useUnifiedTopology: true
 }).then(() => console.log('mongo cloud database successfully connected!'));
+
 
 // middlewares
 app.use(morgan('dev'));
@@ -43,14 +48,16 @@ app.use('/api', userRoutes);
 app.use('/api', categoryRoutes);
 app.use('/api', productRoutes);
 app.use('/api', orderRoutes)
+app.use('/api', sellerRoutes);
+
 // server port
 const port = process.env.PORT;
 
-app.use(express.static(path.join(__dirname,"./build")));
+// app.use(express.static(path.join(__dirname,"./build")));
 
-app.get("*",(req,res) =>{
-    res.sendFile(path.resolve(__dirname,"./build/index.html"));
-})
+// app.get("*",(req,res) =>{
+//     res.sendFile(path.resolve(__dirname,"./build/index.html"));
+// })
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);

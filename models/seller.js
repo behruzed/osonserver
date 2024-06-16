@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const crypto = require('crypto');
 const { v1: uuidv1 } = require('uuid');
 
-const userSchema = new mongoose.Schema({
+const sellerSchema = new mongoose.Schema({
     name: {
         type: String,
         trim: true,
@@ -23,21 +23,17 @@ const userSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    balance: {
+        type: String,
+        trim: true
+    },
     salt: {
         type: String,
     },
-    role: {
-        type: Number,
-        default: 0
-    },
-    history: {
-        type: Array,
-        default: []
-    }
 }, { timestamps: true });
 
 // virtual field
-userSchema.virtual('password')
+sellerSchema.virtual('password')
 .set(function(password) {
     this._password = password;
     this.salt = uuidv1();
@@ -47,7 +43,7 @@ userSchema.virtual('password')
     return this._password;
 });
 
-userSchema.methods = {
+sellerSchema.methods = {
     authenticate: function(plainText) {
         return this.encryptPassword(plainText) === this.hashed_password;
     },
@@ -64,4 +60,4 @@ userSchema.methods = {
     }
 };
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model('Seller', sellerSchema);

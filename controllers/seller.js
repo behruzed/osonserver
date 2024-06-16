@@ -1,12 +1,12 @@
-const User = require('../models/user');
+const Seller = require('../models/seller');
 const { errorHandler } = require('../helpers/dbErrorHandler');
 
-exports.userById = (req, res, next, id) => {
-    User.findById(id).exec((err, user) => {
-        if (err || !user) {
-            return res.status(400).json({ error: 'user not found' });
+exports.sellerById = (req, res, next, id) => {
+    Seller.findById(id).exec((err, seller) => {
+        if (err || !seller) {
+            return res.status(400).json({ error: 'Seller not found' });
         }
-        req.profile = user;
+        req.profile = seller;
         next();
     });
 };
@@ -20,14 +20,14 @@ exports.read = (req, res) => {
 exports.update = (req, res) => {
     const { name, password } = req.body;
 
-    User.findOne({ _id: req.profile._id }, (err, user) => {
-        if (err || !user) {
-            return res.status(400).json({ error: 'User not found' });
+    Seller.findOne({ _id: req.profile._id }, (err, seller) => {
+        if (err || !seller) {
+            return res.status(400).json({ error: 'Seller not found' });
         }
         if (!name) {
             return res.status(400).json({ error: 'Name is required' });
         } else {
-            user.name = name;
+            seller.name = name;
         }
 
         if (password) {
@@ -36,14 +36,14 @@ exports.update = (req, res) => {
                     error: 'Password should be min 6 characters long'
                 });
             } else {
-                user.password = password;
+                seller.password = password;
             }
         }
 
-        user.save((err, updatedUser) => {
+        seller.save((err, updatedUser) => {
             if (err) {
-                console.log('USER UPDATE ERROR', err);
-                return res.status(400).json({ error: 'User update failed' });
+                console.log('SELLER UPDATE ERROR', err);
+                return res.status(400).json({ error: 'Seller update failed' });
             }
             updatedUser.hashed_password = undefined;
             updatedUser.salt = undefined;
@@ -53,7 +53,7 @@ exports.update = (req, res) => {
 };
 
 exports.list = (req, res) => {
-    User.find().exec((err, data) => {
+    Seller.find().exec((err, data) => {
         if (err) {
             return res.status(400).json({ error: errorHandler(err) });
         }

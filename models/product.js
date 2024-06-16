@@ -24,6 +24,18 @@ const productSchema = new mongoose.Schema({
         ref: "Category",
         required: true
     },
+    quantity: {
+        type: Number,
+        trim: true,
+        required: true,
+        maxlength: 32
+    },
+    video_link: {
+        type: String,
+        trim: true,
+        required: true,
+        maxlength: 200
+    },
     photo: {
         data: Buffer,
         contentType: String

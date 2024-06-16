@@ -1,5 +1,6 @@
 const Product = require('../models/product');
 const TelegramBot = require('node-telegram-bot-api')
+const textflow = require("textflow.js");
 const Token = process.env.TOKEN
 
 const bot = new TelegramBot(Token, {
@@ -14,9 +15,18 @@ bot.on('message', msg => {
 
 let orderNumber = 1
 
+
 exports.order = (req, res) => {
     const {id} = req.params
     const {emaunt, price, name, tel} = req.body
+    textflow.useKey("5p0vvuJrLXNrKJPmmY2yo3DIHfLtJ7u7N9MAWEOde30jPJHSYJfWrkMMsKt8c0G0");
+
+    textflow.sendSMS(tel, `Buyurtma raqami ${price} so'm buyutmangiz qabul qilindi`, (result) => {
+        console.log(result)
+        if (result.ok) {
+          console.log("SUCCESS");
+        }
+      })
     Product.findById(id).exec((err, product) => {
         if (err || !product) {
             return res.status(400).json({
@@ -37,7 +47,7 @@ exports.order = (req, res) => {
                 caption: `<b>Buyurtma raqami ${orderNumber}</b>\n\n<b>🧾Mahsulot nomi:</b> ${product.name}\n<b>💰Narxi:</b> ${price} so'm\n<b>🔢Mahsulot soni:</b> ${emaunt}\n<b>👨Buyutmachi:</b> ${name}\n<b>☎️Tel:</b> ${tel}\n`,
                 parse_mode: 'HTML'
             })
-            bot.sendMediaGroup(-1001834215405, media_group)
+            bot.sendMediaGroup(-1002007856253, media_group)
             orderNumber ++
             res.status(200).json({message: 'ok'})
         }
