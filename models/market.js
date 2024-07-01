@@ -1,39 +1,43 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const crypto = require('crypto');
 const { v1: uuidv1 } = require('uuid');
 
-const sellerSchema = new mongoose.Schema({
+const marketSchema = new mongoose.Schema({
     name: {
         type: String,
         trim: true,
         required: true,
-        maxlength: 32
-    }, 
+        maxlength: 32,
+        unique: true
+    },
     phone: {
         type: String,
         trim: true,
         required: true,
         unique: true
     },
+    balance: {
+        type: Number,
+        default: 0
+    },
+    products: {
+        type: Number,
+        default: 0
+    },
+    soldProduct: {
+        type: Number,
+        default: 0
+    },
     hashed_password: {
         type: String,
         required: true
-    },
-    balance: {
-        type: String,
-        trim: true
-    },
-    soldProduct: {
-        type: String,
-        trim: true
     },
     salt: {
         type: String,
     },
 }, { timestamps: true });
 
-// virtual field
-sellerSchema.virtual('password')
+marketSchema.virtual('password')
 .set(function(password) {
     this._password = password;
     this.salt = uuidv1();
@@ -43,7 +47,7 @@ sellerSchema.virtual('password')
     return this._password;
 });
 
-sellerSchema.methods = {
+marketSchema.methods = {
     authenticate: function(plainText) {
         return this.encryptPassword(plainText) === this.hashed_password;
     },
@@ -60,4 +64,4 @@ sellerSchema.methods = {
     }
 };
 
-module.exports = mongoose.model('Seller', sellerSchema);
+module.exports = mongoose.model("Market", marketSchema);

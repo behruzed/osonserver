@@ -2,6 +2,7 @@ const formidable = require('formidable');
 const _ = require('lodash');
 const fs = require('fs');
 const Product = require('../models/product');
+const Market = require('../models/market')
 const { errorHandler } = require('../helpers/dbErrorHandler');
 
 exports.productById = (req, res, next, id) => {
@@ -32,16 +33,25 @@ exports.create = (req, res) => {
         }
 
         // check for all fields
-        const { name, description, price, category, quantity, video_link } = fields;
+        const { name, description, price, category, quantity, market, video_link } = fields;
 
-        if (!name || !description || !price || !category || !quantity) {
+        if (!name || !description || !price || !category || !quantity || !market) {
             return res.status(400).json({
                 error: 'All fields are required'
             });
         }
+        // market's product count should be updated
+        Market.findById(market).exec((err, market) => {
+            if (err || !market) {
+                return res.status(400).json({
+                    error: 'Market not found'
+                });
+            }
+            market.products = market.products + 1;
+            market.save();
+        });
 
         let product = new Product(fields);
-
         if (files.photo) {
             if (files.photo.size > 1000000) {
                 return res.status(400).json({
@@ -50,6 +60,24 @@ exports.create = (req, res) => {
             }
             product.photo.data = fs.readFileSync(files.photo.path);
             product.photo.contentType = files.photo.type;
+        }
+        if (files.photo1) {
+            if (files.photo1.size > 1000000) {
+                return res.status(400).json({
+                    error: 'Image should be less than 1mb in size'
+                });
+            }
+            product.photo1.data = fs.readFileSync(files.photo1.path);
+            product.photo1.contentType = files.photo1.type;
+        }
+        if (files.photo2) {
+            if (files.photo2.size > 1000000) {
+                return res.status(400).json({
+                    error: 'Image should be less than 1mb in size'
+                });
+            }
+            product.photo2.data = fs.readFileSync(files.photo2.path);
+            product.photo2.contentType = files.photo2.type;
         }
 
         product.save((err, result) => {
@@ -69,6 +97,16 @@ exports.remove = (req, res) => {
             return res.status(400).json({ error: errorHandler(err) });
         }
         res.json({ message: 'Product deleted successfully' });
+        // market's product count should be updated
+        Market.findById(product.market).exec((err, market) => {
+            if (err || !market) {
+                return res.status(400).json({
+                    error: 'Market not found'
+                });
+            }
+            market.products = market.products - 1;
+            market.save();
+        });
     });
 };
 
@@ -128,8 +166,9 @@ exports.list = (req, res) => {
     let limit = req.query.limit ? parseInt(req.query.limit) : 6;
 
     Product.find()
-        .select('-photo')
-        .populate('category')
+        .select('name')
+        .select('_id')
+        .select('price')
         .sort([[sortBy, order]])
         .limit(limit)
         .exec((err, products) => {
@@ -224,6 +263,21 @@ exports.photo = (req, res, next) => {
     next();
 };
 
+exports.photo1 = (req, res, next) => {
+    if (req.product.photo1.data) {
+        res.set('Content-Type', req.product.photo1.contentType);
+        return res.send(req.product.photo1.data);
+    }
+    next();
+}
+
+exports.photo2 = (req, res, next) => {
+    if (req.product.photo2.data) {
+        res.set('Content-Type', req.product.photo2.contentType);
+        return res.send(req.product.photo2.data);
+    }
+    next();
+}
 
 exports.listSearch = (req, res) => {
     const query = {};
@@ -246,13 +300,19 @@ exports.listSearch = (req, res) => {
 
 exports.listProducts = (_, res) => {
     Product.find()
+        .select('-photo1')
+        .select('-photo2')
+        .select('-description')
+
         .populate('category', '_id name')
+        .populate('market', '_id name')
         .exec((err, products) => {
             if (err) {
                 return res.status(400).json({
                     error: errorHandler(err)
                 })
             }
+            console.log(products)
             res.json(products);
     });
 }

@@ -20,6 +20,9 @@ const categoryRoutes = require('./routes/category');
 const productRoutes = require('./routes/product');
 const orderRoutes = require('./routes/order')
 const sellerRoutes = require('./routes/seller');
+const marketRoutes = require('./routes/market');
+const referralRoutes = require('./routes/referral');
+const profitRoutes = require('./routes/profit');
 
 
 // express app
@@ -49,6 +52,9 @@ app.use('/api', categoryRoutes);
 app.use('/api', productRoutes);
 app.use('/api', orderRoutes)
 app.use('/api', sellerRoutes);
+app.use('/api', marketRoutes);
+app.use('/api', referralRoutes);
+app.use('/api', profitRoutes);
 
 // server port
 const port = process.env.PORT;
