@@ -34,7 +34,6 @@ exports.profitBySellerId = (req, res) => {
 exports.create = (req, res) => {
     const profit = new Profit(req.body);
     const seller = new Seller(req.seller);
-    console.log(profit);
     if (parseInt(profit.cardNumber.length) !== 16) {
         return res.status(400).json({ error: "Karta raqami 16 xonali bo'lishi kerak" });
     }

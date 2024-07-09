@@ -169,6 +169,7 @@ exports.list = (req, res) => {
         .select('name')
         .select('_id')
         .select('price')
+        .populate('market', '_id name')
         .sort([[sortBy, order]])
         .limit(limit)
         .exec((err, products) => {
@@ -300,10 +301,10 @@ exports.listSearch = (req, res) => {
 
 exports.listProducts = (_, res) => {
     Product.find()
+        .sort('-createdAt')
         .select('-photo1')
         .select('-photo2')
         .select('-description')
-
         .populate('category', '_id name')
         .populate('market', '_id name')
         .exec((err, products) => {
@@ -312,7 +313,6 @@ exports.listProducts = (_, res) => {
                     error: errorHandler(err)
                 })
             }
-            console.log(products)
             res.json(products);
     });
 }

@@ -59,7 +59,9 @@ exports.remove = (req, res) => {
 // get all referals filtered seller id 
 exports.getReferralsBySellerId = (req, res) => {
     const seller = req.seller;
-    Referral.find({ seller: seller._id }).exec((err, data) => {
+    Referral.find({ seller: seller._id })
+    .populate('productId', '_id name video_link')
+    .exec((err, data) => {
         if (err) {
             return res.status(400).json({ error: errorHandler(err) });
         }
