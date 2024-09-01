@@ -1,6 +1,7 @@
 const Profit = require("../models/profit");
 const Seller = require("../models/seller");
 const { errorHandler } = require("../helpers/dbErrorHandler");
+const jwt = require('jsonwebtoken'); // Agar JWT ishlatayotgan bo'lsangiz
 
 exports.profitById = (req, res, next, id) => {
     Profit.findById(id).exec((err, profit) => {
@@ -11,16 +12,51 @@ exports.profitById = (req, res, next, id) => {
         next();
     });
 };
+// Express serverdagi controller funksiyasi
+exports.list = (req, res, token) => {
 
-exports.list = (req, res) => {
     Profit.find().exec((err, data) => {
         if (err) {
             return res.status(400).json({ error: errorHandler(err) });
         }
         res.json(data);
     });
-}
+};
+exports.gettoken = (req, res) => {
+    const { prId, status } = req.query;
 
+    if (!prId || !status) {
+        return res.status(400).json({ error: 'prId and status are required' });
+    }
+
+    // Profitni qidirish
+    Profit.findById(prId).exec((err, profit) => {
+        if (err) {
+            return res.status(400).json({ error: errorHandler(err) });
+        }
+        if (!profit) {
+            return res.status(404).json({ error: 'Profit not found' });
+        }
+
+        // Statusni yangilash
+        profit.status = status;
+
+        // O'zgarishni saqlash
+        profit.save((saveErr, updatedProfit) => {
+            if (saveErr) {
+                return res.status(400).json({ error: errorHandler(saveErr) });
+            }
+
+            // Yangilangan ob'ektni qaytarish
+            res.json(updatedProfit);
+        });
+    });
+};
+exports.updateProfit = (req, res, prId) => {    
+    console.log(10);
+    
+    return res.json(req.profit);
+};
 exports.profitBySellerId = (req, res) => {
     const seller = req.seller;
     Profit.find({ sellerId: seller._id }).exec((err, data) => {
@@ -60,13 +96,34 @@ exports.create = (req, res) => {
 exports.read = (req, res) => {
     return res.json(req.profit);
 };
-
-exports.update = (req, res) => {
+exports.getAllProfits = (req, res, prId) => {    
+    console.log(req, 9);
+    
+    return res.json(req.profit);
+};
+exports.updateProfitStatus = (req, res) => {
+    console.log(96);
+    
+    const { status } = req.body;
+    
+    Profit.findByIdAndUpdate(
+        req.params.profitId, 
+        { status: status }, 
+        { new: true },
+        (err, profit) => {
+            if (err) {
+                return res.status(400).json({ error: "Could not update profit status" });
+            }
+            res.json(profit);
+        }
+    );
+};
+exports.update = (req, res) => {    
     const profit = req.profit;
-    profit.status = req.body.status;
+    profit.status = req.body.status;    
     profit.save((err, data) => {
         if (err) {
-            return res.status(400).json({ error: `yaratib bo'lmadi` });
+            return res.status(400).json({ error: `Yaratib bo'lmadi` });
         }
         res.json(data);
     });

@@ -21,6 +21,11 @@ const orderSchema = new mongoose.Schema({
         ref: 'Product',
         required: true
     },
+    sellerId: {
+        type: ObjectId,
+        ref: 'Seller',
+        required: true
+    },
     productAmount: {
         type: Number,
         trim: true,

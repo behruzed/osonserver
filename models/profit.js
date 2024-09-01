@@ -35,7 +35,7 @@ const profitSchema = new mongoose.Schema({
     status: {
         type: String,
         default: "Jo'natilmoqda",
-        enum: ["Jo'natilmoqda", "To'landi", "Bekor qilindi", "Qabul qilindi"]
+        enum: ["Jo'natilmoqda", "To'landi", "To`landi", "Bekor qilindi", "Qabul qilindi"]
     },
 }, { timestamps: true });
 

@@ -22,7 +22,7 @@
     "mongoose": "^5.10.0",
     "morgan": "^1.10.0",
     "node-telegram-bot-api": "^0.65.1",
-    "nodemon": "^2.0.4",
+    "nodemon": "^2.0.22",
     "textflow.js": "^0.1.4",
     "uuid": "^8.3.0"
   }

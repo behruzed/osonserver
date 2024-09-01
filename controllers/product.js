@@ -18,6 +18,7 @@ exports.productById = (req, res, next, id) => {
 };
 
 exports.read = (req, res) => {
+    const { referralId } = req.params;
     req.product.photo = undefined;
     return res.json(req.product);
 };
@@ -299,12 +300,17 @@ exports.listSearch = (req, res) => {
     }
 };
 
-exports.listProducts = (_, res) => {
+exports.listProducts = (req, res) => {
+    var page = Math.max(0, req.query.page)
+    var limit = Math.max(0, req.query.limit)
+
     Product.find()
         .sort('-createdAt')
         .select('-photo1')
         .select('-photo2')
         .select('-description')
+        .limit(limit)
+        .skip(page)
         .populate('category', '_id name')
         .populate('market', '_id name')
         .exec((err, products) => {
@@ -315,4 +321,20 @@ exports.listProducts = (_, res) => {
             }
             res.json(products);
     });
+}
+
+exports.getButtons = (req, res) => {
+    const limit = req.query.limit;
+    Product.count().exec((err, products) => {
+        if (err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            })
+        }
+        let btns = [];
+        for (let i = 1; i <= Math.ceil(products / limit); i++) {
+            btns.push(i)
+        }
+        res.json(btns)
+    })
 }
