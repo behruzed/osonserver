@@ -15,15 +15,11 @@ exports.create = (req, res) => {
     const referral = new Referral(req.body);
     referral.save((err, data) => {
         if (err) {
-            console.log(err);
-            return res.status(400).json({ error: 'Cannot create referral' });
+            console.error("Error details:", err);
+            return res.status(400).json({ error: 'Cannot create referral', details: err.message });
         }
         res.status(201).json({ data });
     });
-};
-
-exports.read = (req, res) => {
-    return res.json(req.referral);
 };
 
 exports.update = (req, res) => {
