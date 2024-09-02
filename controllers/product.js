@@ -34,9 +34,9 @@ exports.create = (req, res) => {
         }
 
         // check for all fields
-        const { name, description, price, category, quantity, market, video_link } = fields;
+        const { name, description, price, oldPrice, category, quantity, market, video_link } = fields;
 
-        if (!name || !description || !price || !category || !quantity || !market) {
+        if (!name || !description || !price || !oldPrice || !category || !quantity || !market) {
             return res.status(400).json({
                 error: 'All fields are required'
             });
@@ -122,9 +122,9 @@ exports.update = (req, res) => {
         }
 
         // check for all fields
-        const { name, description, price, category } = fields;
+        const { name, description, price, oldPrice, category } = fields;
 
-        if (!name || !description || !price || !category) {
+        if (!name || !description || !price || !oldPrice || !category) {
             return res.status(400).json({
                 error: 'All fields are required'
             });

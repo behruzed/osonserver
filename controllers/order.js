@@ -19,9 +19,8 @@ const Token = process.env.TOKEN;
 exports.create = (req, res) => {
     let orderNumber = Math.floor(Math.random() * 1000000000);
     const { id } = req.params;
-    const { emaunt, price, name, tel, marketId, referral } = req.body;
+    const { emaunt, price, oldPrice, name, tel, marketId, referral } = req.body;
 
-    // Referralni tekshirish va sellerId ni olish
     if (referral) {
         Referral.findById(referral)
         .exec((err, referralData) => {
@@ -30,7 +29,6 @@ exports.create = (req, res) => {
                     error: 'Referral not found'
                 });
             }
-
 
             // `watched` qiymatini 1 taga ko'paytirish
             referralData.watched += 1;
@@ -44,6 +42,8 @@ exports.create = (req, res) => {
                 }
                 
                 // Referral topildi, sellerId ni orderga qo'shish
+                const sellerId = referralData.seller || "Sotuvchisi yo`q bo`lgan mahsulot";
+
                 const order = new Order({
                     orderNumber,
                     marketId,
@@ -51,9 +51,10 @@ exports.create = (req, res) => {
                     productId: id,
                     productAmount: emaunt,
                     price,
+                    oldPrice,
                     name,
                     phone: tel,
-                    sellerId: referralData.seller  // sellerId ni qo'shdik
+                    sellerId // sellerId ni qo'shdik
                 });
 
                 order.save((err, data) => {
@@ -96,7 +97,7 @@ exports.create = (req, res) => {
             });
         });
     } else {
-        // Referral bo'lmasa, orderni sellerId holda saqlash
+        // Referral bo'lmasa, sellerId ni "Sotuvchisi yo'q bo`lgan mahsulot" deb qo'shish
         const order = new Order({
             orderNumber,
             marketId,
@@ -104,14 +105,17 @@ exports.create = (req, res) => {
             productId: id,
             productAmount: emaunt,
             price,
+            // oldPrice ni qo'shmaymiz
             name,
-            phone: tel
+            phone: tel,
+            sellerId: "Sotuvchisi yo`q bo`lgan mahsulot"
         });
-
+        console.log(order, 999999999);
+        
         order.save((err, data) => {
             if (err) {
                 return res.json({
-                    error: 'Error saving order'
+                    error: 'Error saving order2'
                 });
             }
             res.status(200).json({
@@ -154,7 +158,7 @@ exports.multipleOrders = (req, res) => {
     const { orders } = req.body;
     orders.map(order => {
         let orderNumber = Math.floor(Math.random() * 1000000000);
-        const { id, emaunt, price, name, tel, marketId, referral } = order;
+        const { id, emaunt, price, oldPrice, name, tel, marketId, referral } = order;
         const orderDb = new Order({
             orderNumber,
             marketId,
@@ -162,6 +166,7 @@ exports.multipleOrders = (req, res) => {
             productId: id,
             productAmount: emaunt,
             price,
+            oldPrice,
             name,
             phone: tel
         });

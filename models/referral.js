@@ -6,7 +6,7 @@ const referralSchema = new mongoose.Schema({
         type: String,
         trim: true,
         required: true,
-        unique: true,
+        unique: false,
         maxlength: 32
     },
     seller: {
@@ -17,14 +17,12 @@ const referralSchema = new mongoose.Schema({
     price: {
         type: Number,
         trim: true,
-        required: true,
-        maxlength: 32
+        required: true
     },
     productPrice: {
         type: Number,
         trim: true,
-        required: true,
-        maxlength: 32
+        required: true
     },
     productName: {
         type: String,
@@ -35,7 +33,7 @@ const referralSchema = new mongoose.Schema({
     productId: {
         type: ObjectId,
         ref: 'Product',
-        unique: true,
+        unique: false,
         required: true
     },
     watched: {

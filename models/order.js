@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const { ObjectId } = mongoose.Schema;
 
-const orderSchema = new mongoose.Schema({
+const orderScheme = new mongoose.Schema({
     orderNumber: {
         type: Number,
         required: true,
@@ -22,8 +22,7 @@ const orderSchema = new mongoose.Schema({
         required: true
     },
     sellerId: {
-        type: ObjectId,
-        ref: 'Seller',
+        type: String,
         required: true
     },
     productAmount: {
@@ -38,10 +37,17 @@ const orderSchema = new mongoose.Schema({
         required: true,
         maxlength: 32
     },
+    // oldPrice maydonini olib tashlang
     name: {
         type: String,
         trim: true,
         required: true
+    },
+    oldPrice: {
+        type: Number,
+        trim: true,
+        required: false, // o'zgartirilgan
+        default: 0
     },
     phone: {
         type: String,
@@ -52,8 +58,7 @@ const orderSchema = new mongoose.Schema({
     status: {
         type: String,
         default: "Buyurtma qabul qilindi",
-        enum: ["Buyurtma qabul qilindi", "Bekor qilindi", "Jo'natilmoqda", "Jo'natildi", "To'landi"]
+        enum: ["Buyurtma qabul qilindi", "Bekor qilindi", "Jo'natilmoqda", "Jo'natildi", "To'landi", "Arxivlandi"]
     },
 }, { timestamps: true });
-
-module.exports = mongoose.model('Order', orderSchema);
+module.exports = mongoose.model("Order", orderScheme);
