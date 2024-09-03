@@ -34,7 +34,7 @@ mongoose.connect(process.env.DATABASE, {
     useNewUrlParser: true,
     useCreateIndex: true,
     useUnifiedTopology: true
-}).then(() => console.log('mongo cloud database successfully connected!'));
+}).then(() => console.log('DB connected!'));
 
 
 // middlewares
