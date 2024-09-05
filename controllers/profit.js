@@ -53,7 +53,6 @@ exports.gettoken = (req, res) => {
     });
 };
 exports.updateProfit = (req, res, prId) => {    
-    console.log(10);
     
     return res.json(req.profit);
 };
@@ -97,12 +96,10 @@ exports.read = (req, res) => {
     return res.json(req.profit);
 };
 exports.getAllProfits = (req, res, prId) => {    
-    console.log(req, 9);
     
     return res.json(req.profit);
 };
 exports.updateProfitStatus = (req, res) => {
-    console.log(96);
     
     const { status } = req.body;
     

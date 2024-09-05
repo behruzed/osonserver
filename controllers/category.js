@@ -13,6 +13,7 @@ exports.categoryById = (req, res, next, id) => {
 
 exports.create = (req, res) => {
     const category = new Category(req.body);
+    
     category.save((err, data) => {
         if (err) {
             return res.status(400).json({ error: 'cannot create' });
@@ -22,15 +23,21 @@ exports.create = (req, res) => {
 };
 
 exports.read = (req, res) => {
+    
     return res.json(req.category);
 };
 
 exports.update = (req, res) => {
     const category = req.category;
     category.name = req.body.name;
+    
+    // Agar icon yuborilgan bo'lsa, uni ham yangilaymiz
+    if (req.body.icon) {
+        category.icon = req.body.icon;
+    }
     category.save((err, data) => {
         if (err) {
-            return res.status(400).json({ error: `yaratib bo'lmadi`});
+            return res.status(400).json({ error: `yaratib bo'lmadi` });
         }
         res.json(data);
     });
@@ -54,11 +61,11 @@ exports.remove = (req, res) => {
     });
 };
 
-exports.list = (req, res) => {
+exports.list = (req, res) => {    
     Category.find().exec((err, data) => {
         if (err) {
             return res.status(400).json({ error: errorHandler(err) });
-        }
+        }        
         res.json(data);
     });
 };

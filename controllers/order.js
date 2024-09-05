@@ -110,7 +110,6 @@ exports.create = (req, res) => {
             phone: tel,
             sellerId: "Sotuvchisi yo`q bo`lgan mahsulot"
         });
-        console.log(order, 999999999);
         
         order.save((err, data) => {
             if (err) {
@@ -218,7 +217,7 @@ exports.multipleOrders = (req, res) => {
                         console.log("Referral topilmadi.");
                     } else {
                         console.log("Privet");
-                        
+
                     }
                 });
         }

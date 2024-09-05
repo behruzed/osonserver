@@ -23,7 +23,6 @@ router.param('profitId', profitById);
 router.put('/updateProfit/:prId', requireSignin, isAuth, isAdmin, (req, res) => {
     const { prId } = req.params;
     const { status } = req.body; // Yangi status qiymatini oling
-    console.log(prId, "req.params", status, "req.body");
     
     // Profit obyektini prId orqali qidiring va statusini yangilang
     Profit.findByIdAndUpdate(prId, { status }, { new: true }, (err, updatedProfit) => {
