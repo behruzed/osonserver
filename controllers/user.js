@@ -22,6 +22,7 @@ exports.update = (req, res) => {
 
     User.findOne({ _id: req.profile._id }, (err, user) => {
         if (err || !user) {
+            
             return res.status(400).json({ error: 'User not found' });
         }
         if (!name) {

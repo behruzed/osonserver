@@ -226,7 +226,6 @@ exports.listRelated = (req, res) => {
 };
 
 exports.listCategories = (req, res) => {
-    console.log(123321);
     
     Product.distinct('category', {}, (err, categories) => {
         if (err) {

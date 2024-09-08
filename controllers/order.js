@@ -239,98 +239,63 @@ exports.list = (req, res) => {
         });
 };
 
-exports.updateStatus = (req, res) => {
-    const { id } = req.params;
-    const { status } = req.body;
-    Order.findById(id).exec((err, order) => {
-        if (err || !order) {
-            return res.json({
-                error: 'error0'
-            });
+exports.updateStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        const order = await Order.findById(id).exec();
+        if (!order) return res.json({ error: 'error0' });
+
+        const product = await Product.findById(order.productId).exec();
+        if (!product) return res.json({ error: 'error100' });
+
+        if (status === 'Bekor qilindi') {
+            product.quantity += order.productAmount;
+            product.sold -= order.productAmount;
+
+            if (order.referralId) {
+                const referral = await Referral.findById(order.referralId).exec();
+                if (!referral) return res.json({ error: 'error2' });
+
+                referral.canceled += order.productAmount;
+                await referral.save();
+            }
         }
-        Product.findById(order.productId).exec((err, product) => {
-            if (err || !product) {
-                console.log(product, 12);
-                
-                return res.json({
-                    product,
-                    error: 'error1'
-                });
+
+        if (status === 'To\'landi') {
+            const market = await Market.findById(order.marketId).exec();
+            if (!market) return res.json({ error: 'Do`kon ma`lumotlari mavjud emas' });
+
+            market.soldProduct += order.productAmount;
+            await market.save();
+
+            if (order.referralId) {
+                const referral = await Referral.findById(order.referralId).exec();
+                if (!referral) return res.json({ error: 'error4' });
+
+                const seller = await Seller.findById(referral.seller).exec();
+                if (!seller) return res.json({ error: 'error5' });
+
+                seller.balance = String(Number(seller.balance) + Number(product.sellPrice));
+                await seller.save();
+
+                referral.sold += order.productAmount;
+                referral.delivered += order.productAmount;
+                await referral.save();
             }
-            if (status === 'Bekor qilindi') {
-                product.quantity = product.quantity + order.productAmount;
-                product.sold = product.sold - order.productAmount;
+        }
 
-                if (order.referralId) {
-                    Referral.findById(order.referralId).exec((err, referral) => {
-                        if (err || !referral) {
-                            return res.json({
-                                error: 'error2'
-                            });
-                        }
-                        referral.canceled = referral.canceled + order.productAmount;
-                        referral.save();
-                    });
-                }
-            }
-            if (status === 'To\'landi') {
-                Market.findById(order.marketId).exec((err, market) => {
-                    if (err || !market) {
-                        return res.json({
-                            error: 'error3'
-                        });
-                    }
-                    market.soldProduct = market.soldProduct + order.productAmount;
-                    market.save();
-
-                    if (order.referralId) {
-                        Referral.findById(order.referralId).exec((err, referral) => {
-                            if (err || !referral) {
-                                return res.json({
-                                    error: 'error4'
-                                });
-                            }
-
-                            Seller.findById(referral.seller).exec((err, seller) => {
-                                if (err || !seller) {
-                                    return res.json({
-                                        error: 'error5'
-                                    });
-                                }
-
-                                const newBalance = Number(seller.balance) + Number(product.sellPrice);
-                                seller.balance = String(newBalance);
-
-                                seller.save((saveErr) => {
-                                    if (saveErr) {
-                                        return res.json({
-                                            error: 'Error saving seller balance'
-                                        });
-                                    }
-                                });
-                            });
-
-                            referral.sold = referral.sold + order.productAmount;
-                            referral.delivered = referral.delivered + order.productAmount;
-                            referral.save();
-                        });
-                    }
-                });
-            }
-            product.save();
-        });
+        await product.save();
 
         order.status = status;
-        order.save((err, data) => {
-            if (err) {
-                console.log(err);
-                return res.json({
-                    error: 'error8'
-                });
-            }
-            res.json(data);  // Bu response faqat bir marta yuborilishi kerak
-        });
-    });
+        const data = await order.save();
+        res.json(data);
+
+    } catch (err) {
+        console.log(err);
+        res.json({ error: 'error8' });
+    }
 };
 
 exports.remove = (req, res) => {
