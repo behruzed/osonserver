@@ -23,79 +23,79 @@ exports.create = (req, res) => {
 
     if (referral) {
         Referral.findById(referral)
-        .exec((err, referralData) => {
-            if (err || !referralData) {
-                return res.json({
-                    error: 'Referral not found'
-                });
-            }
-
-            // `watched` qiymatini 1 taga ko'paytirish
-            referralData.watched += 1;
-            
-            // Referral ma'lumotlarini saqlash
-            referralData.save((err) => {
-                if (err) {
+            .exec((err, referralData) => {
+                if (err || !referralData) {
                     return res.json({
-                        error: 'Error updating referral'
+                        error: 'Referral not found'
                     });
                 }
-                
-                // Referral topildi, sellerId ni orderga qo'shish
-                const sellerId = referralData.seller || "Sotuvchisi yo`q bo`lgan mahsulot";
 
-                const order = new Order({
-                    orderNumber,
-                    marketId,
-                    referralId: referral,
-                    productId: id,
-                    productAmount: emaunt,
-                    price,
-                    oldPrice,
-                    name,
-                    phone: tel,
-                    sellerId // sellerId ni qo'shdik
-                });
+                // `watched` qiymatini 1 taga ko'paytirish
+                referralData.watched += 1;
 
-                order.save((err, data) => {
+                // Referral ma'lumotlarini saqlash
+                referralData.save((err) => {
                     if (err) {
                         return res.json({
-                            error: 'Error saving order'
+                            error: 'Error updating referral'
                         });
                     }
-                    res.status(200).json({
-                        data,
-                        message: 'Order created successfully'
-                    });
-                });
 
-                // Mahsulotni yangilash
-                Product.findById(id)
-                    .select("-photo1")
-                    .select("-photo2")
-                    .select("-description")
-                    .exec((err, product) => {
-                        if (err || !product) {
+                    // Referral topildi, sellerId ni orderga qo'shish
+                    const sellerId = referralData.seller || "Sotuvchisi yo`q bo`lgan mahsulot";
+
+                    const order = new Order({
+                        orderNumber,
+                        marketId,
+                        referralId: referral,
+                        productId: id,
+                        productAmount: emaunt,
+                        price,
+                        oldPrice,
+                        name,
+                        phone: tel,
+                        sellerId // sellerId ni qo'shdik
+                    });
+
+                    order.save((err, data) => {
+                        if (err) {
                             return res.json({
-                                error: 'Product not found'
+                                error: 'Error saving order'
                             });
                         }
-                        product.sold += emaunt;
-                        product.quantity -= emaunt;
-                        product.save();
-
-                        let media_group = [];
-                        media_group.push({
-                            type: 'photo',
-                            media: product.photo.data,
-                            caption: `<b>Buyurtma raqami ${orderNumber}</b>\n\n<b>🧾Mahsulot nomi:</b> ${product.name}\n<b>💰Narxi:</b> ${price} so'm\n<b>🔢Mahsulot soni:</b> ${emaunt}\n<b>👨Buyutmachi:</b> ${name}\n<b>☎️Tel:</b> ${tel}\n`,
-                            parse_mode: 'HTML'
+                        res.status(200).json({
+                            data,
+                            message: 'Order created successfully'
                         });
-
-                        // bot.sendMediaGroup(-1002007856253, media_group);
                     });
+
+                    // Mahsulotni yangilash
+                    Product.findById(id)
+                        .select("-photo1")
+                        .select("-photo2")
+                        .select("-description")
+                        .exec((err, product) => {
+                            if (err || !product) {
+                                return res.json({
+                                    error: 'Product not found'
+                                });
+                            }
+                            product.sold += emaunt;
+                            product.quantity -= emaunt;
+                            product.save();
+
+                            let media_group = [];
+                            media_group.push({
+                                type: 'photo',
+                                media: product.photo.data,
+                                caption: `<b>Buyurtma raqami ${orderNumber}</b>\n\n<b>🧾Mahsulot nomi:</b> ${product.name}\n<b>💰Narxi:</b> ${price} so'm\n<b>🔢Mahsulot soni:</b> ${emaunt}\n<b>👨Buyutmachi:</b> ${name}\n<b>☎️Tel:</b> ${tel}\n`,
+                                parse_mode: 'HTML'
+                            });
+
+                            // bot.sendMediaGroup(-1002007856253, media_group);
+                        });
+                });
             });
-        });
     } else {
         // Referral bo'lmasa, sellerId ni "Sotuvchisi yo'q bo`lgan mahsulot" deb qo'shish
         const order = new Order({
@@ -110,7 +110,7 @@ exports.create = (req, res) => {
             phone: tel,
             sellerId: "Sotuvchisi yo`q bo`lgan mahsulot"
         });
-        
+
         order.save((err, data) => {
             if (err) {
                 return res.json({
@@ -169,7 +169,7 @@ exports.multipleOrders = (req, res) => {
             name,
             phone: tel
         });
-        
+
         orderDb.save((err, data) => {
             if (err) {
                 return res.json({
@@ -191,7 +191,7 @@ exports.multipleOrders = (req, res) => {
                     return res.json({
                         error: 'error'
                     });
-                } 
+                }
                 if (product) {
                     product.sold = product.sold + emaunt;
                     product.quantity = product.quantity - emaunt;
@@ -245,13 +245,16 @@ exports.updateStatus = (req, res) => {
     Order.findById(id).exec((err, order) => {
         if (err || !order) {
             return res.json({
-                error: 'error'
+                error: 'error0'
             });
         }
         Product.findById(order.productId).exec((err, product) => {
             if (err || !product) {
+                console.log(product, 12);
+                
                 return res.json({
-                    error: 'error'
+                    product,
+                    error: 'error1'
                 });
             }
             if (status === 'Bekor qilindi') {
@@ -262,7 +265,7 @@ exports.updateStatus = (req, res) => {
                     Referral.findById(order.referralId).exec((err, referral) => {
                         if (err || !referral) {
                             return res.json({
-                                error: 'error'
+                                error: 'error2'
                             });
                         }
                         referral.canceled = referral.canceled + order.productAmount;
@@ -274,7 +277,7 @@ exports.updateStatus = (req, res) => {
                 Market.findById(order.marketId).exec((err, market) => {
                     if (err || !market) {
                         return res.json({
-                            error: 'error'
+                            error: 'error3'
                         });
                     }
                     market.soldProduct = market.soldProduct + order.productAmount;
@@ -284,36 +287,28 @@ exports.updateStatus = (req, res) => {
                         Referral.findById(order.referralId).exec((err, referral) => {
                             if (err || !referral) {
                                 return res.json({
-                                    error: 'error'
+                                    error: 'error4'
                                 });
                             }
 
-Seller.findById(referral.seller).exec((err, seller) => {
-    if (err || !seller) {
-        return res.json({
-            error: 'error'
-        });
-    }
+                            Seller.findById(referral.seller).exec((err, seller) => {
+                                if (err || !seller) {
+                                    return res.json({
+                                        error: 'error5'
+                                    });
+                                }
 
-    // Ikkalasini number tipiga o'girish va qo'shish
-    const newBalance = Number(seller.balance) + Number(product.sellPrice);
+                                const newBalance = Number(seller.balance) + Number(product.sellPrice);
+                                seller.balance = String(newBalance);
 
-    // Natijani string tipiga o'girish va saqlash
-    seller.balance = String(newBalance);
-
-    seller.save((saveErr) => {
-        if (saveErr) {
-            return res.json({
-                error: 'Error saving seller balance'
-            });
-        }
-
-        res.json({
-            message: 'Balance updated successfully',
-            seller
-        });
-    });
-});
+                                seller.save((saveErr) => {
+                                    if (saveErr) {
+                                        return res.json({
+                                            error: 'Error saving seller balance'
+                                        });
+                                    }
+                                });
+                            });
 
                             referral.sold = referral.sold + order.productAmount;
                             referral.delivered = referral.delivered + order.productAmount;
@@ -330,10 +325,10 @@ Seller.findById(referral.seller).exec((err, seller) => {
             if (err) {
                 console.log(err);
                 return res.json({
-                    error: 'error'
+                    error: 'error8'
                 });
             }
-            res.json(data);
+            res.json(data);  // Bu response faqat bir marta yuborilishi kerak
         });
     });
 };

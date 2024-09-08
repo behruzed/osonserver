@@ -4,6 +4,7 @@ const fs = require('fs');
 const Product = require('../models/product');
 const Market = require('../models/market')
 const { errorHandler } = require('../helpers/dbErrorHandler');
+const { log } = require('console');
 
 exports.productById = (req, res, next, id) => {
     Product.findById(id).exec((err, product) => {
@@ -92,13 +93,16 @@ exports.create = (req, res) => {
 };
 
 exports.remove = (req, res) => {
+    console.log("User ID:", req.params.userId);
+    console.log("Product ID:", req.params.productId);
+
     let product = req.product;
     product.remove((err, deletedProduct) => {
         if (err) {
             return res.status(400).json({ error: errorHandler(err) });
         }
         res.json({ message: 'Product deleted successfully' });
-        // market's product count should be updated
+        // Market products count should be updated
         Market.findById(product.market).exec((err, market) => {
             if (err || !market) {
                 return res.status(400).json({
