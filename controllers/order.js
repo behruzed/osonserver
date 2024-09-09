@@ -244,13 +244,16 @@ exports.updateStatus = async (req, res) => {
         const { id } = req.params;
         const { status } = req.body;
 
+        // Buyurtmani topish
         const order = await Order.findById(id).exec();
         if (!order) return res.json({ error: 'error0' });
 
+        // Mahsulotni tekshirish, topilmasa warning qaytariladi lekin davom etadi
         const product = await Product.findById(order.productId).exec();
-        if (!product) return res.json({ error: 'error100' });
-
-        if (status === 'Bekor qilindi') {
+        if (!product) {
+            console.log("Warning: Mahsulot mavjud emas");
+        } else if (status === 'Bekor qilindi') {
+            // Agar mahsulot mavjud bo'lsa va buyurtma bekor qilingan bo'lsa mahsulot miqdorini qaytarish
             product.quantity += order.productAmount;
             product.sold -= order.productAmount;
 
@@ -261,12 +264,16 @@ exports.updateStatus = async (req, res) => {
                 referral.canceled += order.productAmount;
                 await referral.save();
             }
+
+            await product.save();
         }
 
-        if (status === 'To\'landi') {
-            const market = await Market.findById(order.marketId).exec();
-            if (!market) return res.json({ error: 'Do`kon ma`lumotlari mavjud emas' });
-
+        // Do'konni tekshirish, topilmasa warning qaytariladi lekin davom etadi
+        const market = await Market.findById(order.marketId).exec();
+        if (!market) {
+            console.log("Warning: Do`kon topilmadi");
+        } else if (status === 'To\'landi') {
+            // Agar do'kon mavjud bo'lsa va buyurtma to'langan bo'lsa do'kon sotilgan mahsulotlarni yangilash
             market.soldProduct += order.productAmount;
             await market.save();
 
@@ -286,8 +293,7 @@ exports.updateStatus = async (req, res) => {
             }
         }
 
-        await product.save();
-
+        // Buyurtma statusini yangilash
         order.status = status;
         const data = await order.save();
         res.json(data);
