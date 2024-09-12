@@ -4,7 +4,7 @@ const { errorHandler } = require('../helpers/dbErrorHandler');
 exports.sellerById = (req, res, next, id) => {
     Seller.findById(id).exec((err, seller) => {
         if (err || !seller) {
-            return res.status(400).json({ error: 'Seller not found' });
+            return res.status(400).json({ error: 'Tizim sotuvchi akkauntini aniqlay olmadi' });
         }
         req.seller = seller;
         next();
@@ -33,7 +33,7 @@ exports.update = (req, res) => {
     const { name, password } = req.body;
     Seller.findOne({ _id: req.profile._id }, (err, seller) => {
         if (err || !seller) {
-            return res.status(400).json({ error: 'Seller not found' });
+            return res.status(400).json({ error: 'Tizim sotuvchi akkauntini aniqlay olmadi' });
         }
         if (!name) {
             return res.status(400).json({ error: 'Name is required' });
