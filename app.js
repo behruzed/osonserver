@@ -20,6 +20,7 @@ const categoryRoutes = require('./routes/category');
 const productRoutes = require('./routes/product');
 const orderRoutes = require('./routes/order')
 const sellerRoutes = require('./routes/seller');
+const operatorRoutes = require('./routes/operator');
 const marketRoutes = require('./routes/market');
 const referralRoutes = require('./routes/referral');
 const profitRoutes = require('./routes/profit');
@@ -52,6 +53,7 @@ app.use('/api', categoryRoutes);
 app.use('/api', productRoutes);
 app.use('/api', orderRoutes)
 app.use('/api', sellerRoutes);
+app.use('/api', operatorRoutes);
 app.use('/api', marketRoutes);
 app.use('/api', referralRoutes);
 app.use('/api', profitRoutes);
@@ -68,4 +70,3 @@ const port = process.env.PORT;
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
-

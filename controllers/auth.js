@@ -1,12 +1,16 @@
 const User = require('../models/user');
 const Seller = require('../models/seller')
+const Operator = require('../models/operator')
 const jwt = require('jsonwebtoken'); // to generate signed token
 const expressJwt = require('express-jwt'); // for authorization check
 const { errorHandler } = require('../helpers/dbErrorHandler');
 
 exports.signup = (req, res) => {
-    const user = req.body
+    const user = req.body;
+    
+
     if (user.role === 'admin') {
+        
         const admin = new User(user);
         admin.role = 1;
         admin.save((err, user) => {
@@ -14,6 +18,18 @@ exports.signup = (req, res) => {
                 return res.status(400).json({ error: errorHandler(err) });
             }
             res.json({ user });
+        });
+    } else if (user.role === 'operator') {
+
+        const operator = new Operator(user);
+        operator.role = 2;
+        operator.balance = 0;
+        operator.soldProduct = 0;
+        operator.save((err, operator) => {
+            if (err) {
+                return res.status(400).json({ error: errorHandler(err) });
+            }
+            res.json({ operator });
         });
     } else {
         const seller = new Seller(user);
@@ -29,51 +45,55 @@ exports.signup = (req, res) => {
 };
 
 exports.signin = (req, res) => {
-    // find the user based on number 
     const { phone, password, role } = req.body;
-    if (role == 'admin') {
+
+    if (role === 'admin') {
         User.findOne({ phone }, (err, user) => {
             if (err || !user) {
                 return res.status(400).json({
                     error: 'Bu raqamga ega foydalanuvchi mavjud emas. Iltimos, roʻyxatdan oʻting'
                 });
             }
-            // if user is found make sure the email and password match
-            // create authenticate method in user model
             if (!user.authenticate(password)) {
                 return res.status(401).json({
                     error: 'Login parol mos kelmaydi!'
                 });
             }
-            // generate a signed token with user id and secret
             const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
-            // persist the token as 't' in cookie with expiry date
             res.cookie('t', token, { expire: new Date() + 9999 });
-            // return response with user and token to frontend client
             const { _id, name, phone, role } = user;
             return res.json({ token, user: { _id, phone, name, role } });
         });
-    } else {
-        Seller.findOne({ phone }, (err, user) => {
-            if (err || !user) {
-                return res.status(400).json({
-                    error: 'Bu raqamga ega foydalanuvchi mavjud emas. Iltimos, roʻyxatdan oʻting'
+    } else if (role === 'user') {
+        Operator.findOne({ phone }, (err, operator) => {
+            if (err || !operator) {
+                Seller.findOne({ phone }, (err, seller) => {
+                    if (err || !seller) {
+                        return res.status(400).json({
+                            error: 'Bu raqamga ega foydalanuvchi mavjud emas. Iltimos, roʻyxatdan oʻting'
+                        });
+                    }
+                    if (!seller.authenticate(password)) {
+                        return res.status(401).json({
+                            error: 'Login parol mos kelmaydi!'
+                        });
+                    }
+                    const token = jwt.sign({ _id: seller._id }, process.env.JWT_SECRET);
+                    res.cookie('t', token, { expire: new Date() + 9999 });
+                    const { _id, name, phone, role } = seller;
+                    return res.json({ token, user: { _id, phone, name, role } });
                 });
+            } else {
+                if (!operator.authenticate(password)) {
+                    return res.status(401).json({
+                        error: 'Login parol mos kelmaydi!'
+                    });
+                }
+                const token = jwt.sign({ _id: operator._id }, process.env.JWT_SECRET);
+                res.cookie('t', token, { expire: new Date() + 9999 });
+                const { _id, name, phone, role } = operator;
+                return res.json({ token, user: { _id, phone, name, role } });
             }
-            // if user is found make sure the email and password match
-            // create authenticate method in user model
-            if (!user.authenticate(password)) {
-                return res.status(401).json({
-                    error: 'Login parol mos kelmaydi!'
-                });
-            }
-            // generate a signed token with user id and secret
-            const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
-            // persist the token as 't' in cookie with expiry date
-            res.cookie('t', token, { expire: new Date() + 9999 });
-            // return response with user and token to frontend client
-            const { _id, name, phone, role } = user;
-            return res.json({ token, user: { _id, phone, name, role } });
         });
     }
 };
@@ -108,4 +128,3 @@ exports.isAdmin = (req, res, next) => {
     }
     next();
 };
-

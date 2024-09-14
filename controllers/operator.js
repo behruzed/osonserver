@@ -1,25 +1,25 @@
-const Seller = require('../models/seller');
+const Operator = require('../models/operator');
 const { errorHandler } = require('../helpers/dbErrorHandler');
 
-exports.sellerById = (req, res, next, id) => {
-    Seller.findById(id).exec((err, seller) => {
-        if (err || !seller) {
-            return res.status(400).json({ error: 'Tizim sotuvchi akkauntini aniqlay olmadi3' });
+exports.operatorById = (req, res, next, id) => {
+    Operator.findById(id).exec((err, operator) => {
+        if (err || !operator) {
+            return res.status(400).json({ error: 'Tizim sotuvchi akkauntini aniqlay olmadi1' });
         }
-        req.seller = seller;
+        req.operator = operator;
         next();
     });
 };
 
 exports.read = (req, res) => {
-    req.seller.hashed_password = undefined;
-    req.seller.salt = undefined;
-    return res.json(req.seller);
+    req.operator.hashed_password = undefined;
+    req.operator.salt = undefined;
+    return res.json(req.operator);
 };
 
 exports.create = (req, res) => {
-    const seller = new Seller(req.body);
-    seller.save((err, data) => {
+    const operator = new Operator(req.body);
+    operator.save((err, data) => {
         if (err) {
             console.log(err)
             return res.status(400).json({ error: 'cannot create' });
@@ -31,14 +31,14 @@ exports.create = (req, res) => {
 
 exports.update = (req, res) => {
     const { name, password } = req.body;
-    Seller.findOne({ _id: req.profile._id }, (err, seller) => {
-        if (err || !seller) {
-            return res.status(400).json({ error: 'Tizim sotuvchi akkauntini aniqlay olmadi4' });
+    Operator.findOne({ _id: req.profile._id }, (err, operator) => {
+        if (err || !operator) {
+            return res.status(400).json({ error: 'Tizim sotuvchi akkauntini aniqlay olmadi2' });
         }
         if (!name) {
             return res.status(400).json({ error: 'Name is required' });
         } else {
-            seller.name = name;
+            operator.name = name;
         }
 
         if (password) {
@@ -47,14 +47,14 @@ exports.update = (req, res) => {
                     error: 'Password should be min 6 characters long'
                 });
             } else {
-                seller.password = password;
+                operator.password = password;
             }
         }
 
-        seller.save((err, updatedUser) => {
+        operator.save((err, updatedUser) => {
             if (err) {
-                console.log('SELLER UPDATE ERROR', err);
-                return res.status(400).json({ error: 'Seller update failed' });
+                console.log('OPERATOR UPDATE ERROR', err);
+                return res.status(400).json({ error: 'operator update failed' });
             }
             updatedUser.hashed_password = undefined;
             updatedUser.salt = undefined;
@@ -64,25 +64,25 @@ exports.update = (req, res) => {
 };
 
 exports.remove = (req, res) => {
-    const seller = req.seller;
-    Seller.find({ seller }).exec((err, data) => {
+    const operator = req.operator;
+    Operator.find({ operator }).exec((err, data) => {
         if (data.length >= 1) {
             return res.status(400).json({
                 message: `Sorry. You cant delete It has ${data.length} associated products.`
             });
         } else {
-            seller.remove((err, data) => {
+            operator.remove((err, data) => {
                 if (err) {
                     return res.status(400).json({ error: errorHandler(err) });
                 }
-                res.json({ message: 'Seller deleted' });
+                res.json({ message: 'Operator deleted' });
             });
         }
     });
 };
 
 exports.list = (req, res) => {
-    Seller.find().exec((err, data) => {
+    Operator.find().exec((err, data) => {
         if (err) {
             return res.status(400).json({ error: errorHandler(err) });
         }

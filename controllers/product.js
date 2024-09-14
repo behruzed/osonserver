@@ -93,8 +93,6 @@ exports.create = (req, res) => {
 };
 
 exports.remove = (req, res) => {
-    console.log("User ID:", req.params.userId);
-    console.log("Product ID:", req.params.productId);
 
     let product = req.product;
     product.remove((err, deletedProduct) => {
