@@ -124,9 +124,9 @@ exports.update = (req, res) => {
         }
 
         // check for all fields
-        const { name, description, price, oldPrice, category } = fields;
+        const { name, description, price, oldPrice, quantity, category } = fields;
 
-        if (!name || !description || !price || !oldPrice || !category) {
+        if (!name || !description || !price || !oldPrice || !quantity || !category) {
             return res.status(400).json({
                 error: 'All fields are required'
             });
@@ -171,6 +171,7 @@ exports.list = (req, res) => {
     Product.find()
         .select('name')
         .select('oldPrice')
+        .select('quantity')
         .select('_id')
         .select('price')
         .populate('market', '_id name')
@@ -193,6 +194,7 @@ exports.listChosenCategory = (req, res) => {
     .select('name')
     .select('oldPrice')
     .select('_id')
+    .select('quantity')
         .select('price')
         .populate('market', '_id name')
         .sort([[sortBy, order]])
