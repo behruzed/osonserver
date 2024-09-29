@@ -57,8 +57,8 @@ const orderScheme = new mongoose.Schema({
     },
     status: {
         type: String,
-        default: "Buyurtma qabul qilindi",
-        enum: ["Buyurtma qabul qilindi", "Bekor qilindi", "Jo'natilmoqda", "Jo'natildi", "To'landi", "Arxivlandi"]
+        default: "Jarayonda",
+        enum: ["Buyurtma qabul qilindi", "Bekor qilindi",  "Jarayonda", "Jo'natilmoqda", "Jo'natildi", "To'landi", "Arxivlandi"]
     },
 }, { timestamps: true });
 module.exports = mongoose.model("Order", orderScheme);

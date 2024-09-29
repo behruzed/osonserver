@@ -291,7 +291,7 @@ exports.updateStatus = async (req, res) => {
 
     } catch (err) {
         console.log("Xatolik yuz berdi: ", err);
-        res.json({ error: 'error8', message: err.message });
+        res.json({ error: 'error88', message: err.message });
     }
 };
 
