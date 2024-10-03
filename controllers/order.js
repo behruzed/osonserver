@@ -263,28 +263,42 @@ exports.updateStatus = async (req, res) => {
 
             await product.save();
         }
+
+        // Status "Buyurtma qabul qilindi" bo'lsa referral.accepted ni 1ga oshirish
+        if (status === 'Buyurtma qabul qilindi' && order.referralId) {
+            const referral = await Referral.findById(order.referralId).exec();
+            if (!referral) return res.json({ error: 'error2' });
+
+            referral.accepted += 1;
+            await referral.save();
+        }
+
         const market = await Market.findById(order.marketId).exec();
         if (!market) {
             console.log("Warning: Do`kon topilmadi");
-        } else if (status === 'To\'landi') {
-            market.soldProduct += order.productAmount;
-            await market.save();
+        }
 
-            if (order.referralId) {
-                const referral = await Referral.findById(order.referralId).exec();
-                if (!referral) return res.json({ error: 'error4' });
+        if (order.referralId) {
+            const referral = await Referral.findById(order.referralId).exec();
+            if (!referral) return res.json({ error: 'error4' });
 
-                const seller = await Seller.findById(referral.seller).exec();
-                if (!seller) return res.json({ error: 'error5' });
-
-                seller.balance = String(Number(seller.balance) + Number(product.sellPrice));
-                await seller.save();
-
-                referral.sold += order.productAmount;
-                referral.delivered += order.productAmount;
+            if (status === 'To\'landi') {
+                referral.sold += 1;
                 await referral.save();
             }
+
+            if (status === 'Jo\'natilmoqda') {
+                referral.delivered += 1;
+                await referral.save();
+            }
+
+            const seller = await Seller.findById(referral.seller).exec();
+            if (!seller) return res.json({ error: 'error5' });
+
+            seller.balance = String(Number(seller.balance) + Number(product.sellPrice));
+            await seller.save();
         }
+
         order.status = status;
         const data = await order.save();
         res.json(data);

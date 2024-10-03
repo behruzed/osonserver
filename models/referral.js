@@ -52,6 +52,10 @@ const referralSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    confirmed: {
+        type: Number,
+        default: 0
+    },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Referral', referralSchema);
