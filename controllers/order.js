@@ -242,7 +242,8 @@ exports.list = (req, res) => {
 exports.updateStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body;
+        const { status, myname, region } = req.body; // req.body'dan kerakli ma'lumotlarni olamiz
+
         const order = await Order.findById(id).exec();
         if (!order) return res.json({ error: 'error0' });
 
@@ -259,18 +260,43 @@ exports.updateStatus = async (req, res) => {
 
                 referral.canceled += order.productAmount;
                 await referral.save();
+
+                if (order.paid) {
+                    const seller = await Seller.findById(referral.seller).exec();
+                    if (!seller) return res.json({ error: 'error5' });
+
+                    seller.balance = String(Number(seller.balance) - Number(product.sellPrice));
+                    await seller.save();
+
+                    order.paid = false;
+                }
             }
 
             await product.save();
         }
 
-        // Status "Buyurtma qabul qilindi" bo'lsa referral.accepted ni 1ga oshirish
-        if (status === 'Buyurtma qabul qilindi' && order.referralId) {
-            const referral = await Referral.findById(order.referralId).exec();
-            if (!referral) return res.json({ error: 'error2' });
+        // Agar status "Buyurtma qabul qilindi" bo'lsa, operator va region yangilanadi
+        if (status === 'Buyurtma qabul qilindi') {
+            order.operator = myname; // req.body'dan kelgan myname
+            order.region = region;   // req.body'dan kelgan region
 
-            referral.accepted += 1;
-            await referral.save();
+            if (order.referralId) {
+                const referral = await Referral.findById(order.referralId).exec();
+                if (!referral) return res.json({ error: 'error2' });
+
+                referral.accepted += 1;
+                await referral.save();
+
+                if (!order.paid) {
+                    const seller = await Seller.findById(referral.seller).exec();
+                    if (!seller) return res.json({ error: 'error5' });
+
+                    seller.balance = String(Number(seller.balance) + Number(product.sellPrice));
+                    await seller.save();
+
+                    order.paid = true;
+                }
+            }
         }
 
         const market = await Market.findById(order.marketId).exec();
@@ -287,16 +313,10 @@ exports.updateStatus = async (req, res) => {
                 await referral.save();
             }
 
-            if (status === 'Jo\'natilmoqda') {
+            if (status === 'Yetkazilmoqda') {
                 referral.delivered += 1;
                 await referral.save();
             }
-
-            const seller = await Seller.findById(referral.seller).exec();
-            if (!seller) return res.json({ error: 'error5' });
-
-            seller.balance = String(Number(seller.balance) + Number(product.sellPrice));
-            await seller.save();
         }
 
         order.status = status;

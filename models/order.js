@@ -37,16 +37,33 @@ const orderScheme = new mongoose.Schema({
         required: true,
         maxlength: 32
     },
-    // oldPrice maydonini olib tashlang
     name: {
         type: String,
         trim: true,
         required: true
     },
+    region: {
+        type: String,
+        trim: true,
+        required: true,
+        default: "Tanlanmagan"
+    },
+    operator: {
+        type: String,
+        trim: true,
+        required: true,
+        default: "Tanlanmagan"
+    },
+    paid: {
+        type: Boolean,
+        trim: true,
+        required: true,
+        default: false
+    },
     oldPrice: {
         type: Number,
         trim: true,
-        required: false, // o'zgartirilgan
+        required: false,
         default: 0
     },
     phone: {
