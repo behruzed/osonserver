@@ -3,8 +3,6 @@ const mongoose = require('mongoose');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
-const path = require("path");
-const textflow = require("textflow.js");
 
 // config dotenv
 require('dotenv').config({
@@ -25,7 +23,6 @@ const profitRoutes = require('./routes/profit');
 
 // express app
 const app = express();
-textflow.useKey(process.env.YOUR_API_KEY);
 
 // database connection
 mongoose.connect(process.env.DATABASE, {
@@ -34,14 +31,20 @@ mongoose.connect(process.env.DATABASE, {
 }).then(() => console.log('DB connected!'))
   .catch(err => console.log('DB connection error:', err));
 
+// CORS configuration
+const corsOptions = {
+    origin: ['https://osonmarket.com', 'https://osonserver-517x.onrender.com'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+};
+
+app.use(cors(corsOptions));
+
 // middlewares
 app.use(morgan('dev'));
-app.use(express.json()); // express.json() already parses JSON, no need for body-parser
+app.use(express.json()); // body-parser o'rniga express.json() ishlatilmoqda
 app.use(cookieParser());
-// app.use(cors()); // allow cross-origin requests
-app.use(cors({
-    origin: ['http://localhost:5173', 'https://osonmarket.com']
-}));
 
 // routes middleware
 app.use('/api', authRoutes);
@@ -55,14 +58,8 @@ app.use('/api', marketRoutes);
 app.use('/api', referralRoutes);
 app.use('/api', profitRoutes);
 
-// Serve static files for production (optional)
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, 'build')));
-
-    app.get('*', (req, res) => {
-        res.sendFile(path.resolve(__dirname, 'build', 'index.html'));
-    });
-}
+// OPTIONS requests for preflight
+app.options('*', cors(corsOptions));
 
 // server port
 const port = process.env.PORT || 8000;
