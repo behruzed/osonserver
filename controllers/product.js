@@ -173,7 +173,11 @@ exports.list = (req, res) => {
         .select('oldPrice')
         .select('quantity')
         .select('_id')
+        .select('photo')
         .select('price')
+        .select('sold')
+        .select('description')
+
         .populate('market', '_id name')
         .sort([[sortBy, order]])
         .limit(limit)
