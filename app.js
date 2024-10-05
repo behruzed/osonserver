@@ -33,7 +33,7 @@ mongoose.connect(process.env.DATABASE, {
 
 // CORS configuration
 const corsOptions = {
-    origin: ['https://osonmarket.com', 'https://osonserver-517x.onrender.com'],
+    origin: ['https://osonmarket.com', 'https://osonserver-517x.onrender.com', 'http://localhost:5173'],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
