@@ -19,7 +19,9 @@ const Token = process.env.TOKEN;
 exports.create = (req, res) => {
     let orderNumber = Math.floor(Math.random() * 1000000000);
     const { id } = req.params;
-    const { emaunt, price, oldPrice, name, tel, marketId, referral } = req.body;
+    console.log(req.body);
+    
+    const { emaunt, price, oldPrice, promo, name, tel, marketId, referral } = req.body;
 
     if (referral) {
         Referral.findById(referral)
@@ -51,6 +53,7 @@ exports.create = (req, res) => {
                         productId: id,
                         productAmount: emaunt,
                         price,
+                        promo,
                         oldPrice,
                         name,
                         phone: tel,
@@ -103,6 +106,7 @@ exports.create = (req, res) => {
             marketId,
             referralId: null,
             productId: id,
+            promo,
             productAmount: emaunt,
             price,
             // oldPrice ni qo'shmaymiz

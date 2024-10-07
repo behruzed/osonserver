@@ -66,6 +66,11 @@ const orderScheme = new mongoose.Schema({
         required: false,
         default: 0
     },
+    promo: {
+        type: Boolean,
+        trim: true,
+        required: false,
+    },
     phone: {
         type: String,
         trim: true,
