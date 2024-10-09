@@ -16,6 +16,92 @@ const Token = process.env.TOKEN;
 //     bot.sendMessage(chatId, text);
 // });
 
+exports.metaOrder = (req, res) => {
+    const { phone, name, offer_id, referral } = req.params;
+
+    // let orderNumber = Math.floor(Math.random() * 1000000000);
+    // if (referral) {
+    //     Referral.findById(referral)
+    //         .exec((err, referralData) => {
+    //             if (err || !referralData) {
+    //                 return res.json({
+    //                     error: 'Referral not found'
+    //                 });
+    //             }
+    //             referralData.watched += 1;
+    //             referralData.save((err) => {
+    //                 if (err) {
+    //                     return res.json({
+    //                         error: 'Error updating referral'
+    //                     });
+    //                 }
+    //                 const sellerId = referralData.seller || "Sotuvchisi yo`q bo`lgan mahsulot";
+
+    //                 const order = new Order({
+    //                     orderNumber,
+    //                     referralId: referral,
+    //                     productId: offer_id,
+    //                     oldPrice,
+    //                     name,
+    //                     phone: phone,
+    //                     sellerId
+    //                 });
+
+    //                 order.save((err, data) => {
+    //                     if (err) {
+    //                         return res.json({
+    //                             error: 'Error saving order'
+    //                         });
+    //                     }
+    //                     res.status(200).json({
+    //                         data,
+    //                         message: 'Order created successfully'
+    //                     });
+    //                 });
+    //             });
+    //         });
+    // } else {
+    //     const order = new Order({
+    //         orderNumber,
+    //         referralId: null,
+    //         productId: offer_id,
+    //         productAmount: emaunt,
+    //         price,
+    //         name,
+    //         phone: phone,
+    //         sellerId: "Sotuvchisi yo`q bo`lgan mahsulot"
+    //     });
+    //     order.save((err, data) => {
+    //         if (err) {
+    //             return res.json({
+    //                 error: 'Error saving order2'
+    //             });
+    //         }
+    //         res.status(200).json({
+    //             data,
+    //             message: 'Order created successfully'
+    //         });
+    //     });
+    //     Product.findById(id)
+    //         .select("-photo1")
+    //         .select("-photo2")
+    //         .select("-description")
+    //         .exec((err, product) => {
+    //             if (err || !product) {
+    //                 return res.json({
+    //                     error: 'Product not found'
+    //                 });
+    //             }
+    //             product.sold += emaunt;
+    //             product.quantity -= emaunt;
+    //             product.save();
+
+    //         });
+    // }
+    console.log(phone, name, offer_id, referral)
+    return res.status(200).json({message: "ok"});
+}
+
 exports.create = (req, res) => {
     let orderNumber = Math.floor(Math.random() * 1000000000);
     const { id } = req.params;
