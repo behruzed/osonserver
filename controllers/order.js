@@ -19,10 +19,7 @@ const Token = process.env.TOKEN;
 exports.create = (req, res) => {
     let orderNumber = Math.floor(Math.random() * 1000000000);
     const { id } = req.params;
-    console.log(req.body);
-    
     const { emaunt, price, oldPrice, promo, name, tel, marketId, referral } = req.body;
-
     if (referral) {
         Referral.findById(referral)
             .exec((err, referralData) => {
@@ -31,19 +28,13 @@ exports.create = (req, res) => {
                         error: 'Referral not found'
                     });
                 }
-
-                // `watched` qiymatini 1 taga ko'paytirish
                 referralData.watched += 1;
-
-                // Referral ma'lumotlarini saqlash
                 referralData.save((err) => {
                     if (err) {
                         return res.json({
                             error: 'Error updating referral'
                         });
                     }
-
-                    // Referral topildi, sellerId ni orderga qo'shish
                     const sellerId = referralData.seller || "Sotuvchisi yo`q bo`lgan mahsulot";
 
                     const order = new Order({
@@ -57,7 +48,7 @@ exports.create = (req, res) => {
                         oldPrice,
                         name,
                         phone: tel,
-                        sellerId // sellerId ni qo'shdik
+                        sellerId
                     });
 
                     order.save((err, data) => {
@@ -71,8 +62,6 @@ exports.create = (req, res) => {
                             message: 'Order created successfully'
                         });
                     });
-
-                    // Mahsulotni yangilash
                     Product.findById(id)
                         .select("-photo1")
                         .select("-photo2")
@@ -86,7 +75,6 @@ exports.create = (req, res) => {
                             product.sold += emaunt;
                             product.quantity -= emaunt;
                             product.save();
-
                             let media_group = [];
                             media_group.push({
                                 type: 'photo',
@@ -94,13 +82,10 @@ exports.create = (req, res) => {
                                 caption: `<b>Buyurtma raqami ${orderNumber}</b>\n\n<b>🧾Mahsulot nomi:</b> ${product.name}\n<b>💰Narxi:</b> ${price} so'm\n<b>🔢Mahsulot soni:</b> ${emaunt}\n<b>👨Buyutmachi:</b> ${name}\n<b>☎️Tel:</b> ${tel}\n`,
                                 parse_mode: 'HTML'
                             });
-
-                            // bot.sendMediaGroup(-1002007856253, media_group);
                         });
                 });
             });
     } else {
-        // Referral bo'lmasa, sellerId ni "Sotuvchisi yo'q bo`lgan mahsulot" deb qo'shish
         const order = new Order({
             orderNumber,
             marketId,
@@ -109,12 +94,10 @@ exports.create = (req, res) => {
             promo,
             productAmount: emaunt,
             price,
-            // oldPrice ni qo'shmaymiz
             name,
             phone: tel,
             sellerId: "Sotuvchisi yo`q bo`lgan mahsulot"
         });
-
         order.save((err, data) => {
             if (err) {
                 return res.json({
@@ -126,8 +109,6 @@ exports.create = (req, res) => {
                 message: 'Order created successfully'
             });
         });
-
-        // Mahsulotni yangilash
         Product.findById(id)
             .select("-photo1")
             .select("-photo2")
@@ -149,8 +130,6 @@ exports.create = (req, res) => {
                     caption: `<b>Buyurtma raqami ${orderNumber}</b>\n\n<b>🧾Mahsulot nomi:</b> ${product.name}\n<b>💰Narxi:</b> ${price} so'm\n<b>🔢Mahsulot soni:</b> ${emaunt}\n<b>👨Buyutmachi:</b> ${name}\n<b>☎️Tel:</b> ${tel}\n`,
                     parse_mode: 'HTML'
                 });
-
-                // bot.sendMediaGroup(-1002007856253, media_group);
             });
     }
 };

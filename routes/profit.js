@@ -4,11 +4,11 @@ const { updateProfitStatus } = require('../controllers/profit');
 
 const { requireSignin, isAuth, isAdmin } = require('../controllers/auth');
 
-const { profitById, read, update, list, remove, create, updateProfit, profitBySellerId, getAllProfits, gettoken } = require('../controllers/profit');
+const { profitById, read, update, list, remove, create, updateProfit, profitBySellerId, profitByOperatorId, getAllProfits, gettoken } = require('../controllers/profit');
 const { sellerById } = require('../controllers/seller');
 const { userById } = require('../controllers/user');
-
 router.get('/profit-by-user/:sellerId', profitBySellerId); 
+router.get('/profit-by-user/:operatorId', profitByOperatorId); 
 router.get('/profit/:referralId', read);
 router.post('/profit/create/:sellerId', requireSignin, isAuth, create);
 router.put('/profit/:profitId/:userId', requireSignin, isAuth, isAdmin, update);

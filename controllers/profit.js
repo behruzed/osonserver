@@ -57,8 +57,21 @@ exports.updateProfit = (req, res, prId) => {
     return res.json(req.profit);
 };
 exports.profitBySellerId = (req, res) => {
+    console.log(12);
+    
     const seller = req.seller;
     Profit.find({ sellerId: seller._id }).exec((err, data) => {
+        if (err) {
+            return res.status(400).json({ error: errorHandler(err) });
+        }
+        res.json(data);
+    });
+}
+exports.profitByOperatorId = (req, res) => {
+    console.log(1);
+    
+    const seller = req.seller;
+    Profit.find({ operatorId: operator._id }).exec((err, data) => {
         if (err) {
             return res.status(400).json({ error: errorHandler(err) });
         }

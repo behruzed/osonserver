@@ -19,6 +19,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    balance: {
+        type: String,
+        trim: true
+    },
     about: {
         type: String,
         trim: true
