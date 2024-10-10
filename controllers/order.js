@@ -348,6 +348,15 @@ exports.updateStatus = async (req, res) => {
             if (status === 'To\'landi') {
                 referral.sold += 1;
                 await referral.save();
+                if (!order.paid) {
+                    const seller = await Seller.findById(referral.seller).exec();
+                    if (!seller) return res.json({ error: 'error5' });
+
+                    seller.balance = String(Number(seller.balance) + Number(product.sellPrice));
+                    await seller.save();
+
+                    order.paid = true;
+                }
             }
 
             if (status === 'Yetkazilmoqda') {
