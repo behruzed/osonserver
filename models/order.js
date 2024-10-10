@@ -23,7 +23,7 @@ const orderScheme = new mongoose.Schema({
     },
     sellerId: {
         type: String,
-        required: true
+        required: false
     },
     productAmount: {
         type: Number,

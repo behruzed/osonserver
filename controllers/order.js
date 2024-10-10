@@ -4,6 +4,7 @@ const Order = require('../models/order');
 const Referral = require('../models/referral');
 const Seller = require('../models/seller');
 const TelegramBot = require('node-telegram-bot-api');
+const market = require('../models/market');
 const Token = process.env.TOKEN;
 
 // const bot = new TelegramBot(Token, {
@@ -16,91 +17,58 @@ const Token = process.env.TOKEN;
 //     bot.sendMessage(chatId, text);
 // });
 
-exports.metaOrder = (req, res) => {
-    const { phone, name, offer_id, referral } = req.params;
 
-    // let orderNumber = Math.floor(Math.random() * 1000000000);
-    // if (referral) {
-    //     Referral.findById(referral)
-    //         .exec((err, referralData) => {
-    //             if (err || !referralData) {
-    //                 return res.json({
-    //                     error: 'Referral not found'
-    //                 });
-    //             }
-    //             referralData.watched += 1;
-    //             referralData.save((err) => {
-    //                 if (err) {
-    //                     return res.json({
-    //                         error: 'Error updating referral'
-    //                     });
-    //                 }
-    //                 const sellerId = referralData.seller || "Sotuvchisi yo`q bo`lgan mahsulot";
+exports.metaOrder = async (req, res) => {
+    try {
+        let { phone, name, offer_id, referral } = req.query;
 
-    //                 const order = new Order({
-    //                     orderNumber,
-    //                     referralId: referral,
-    //                     productId: offer_id,
-    //                     oldPrice,
-    //                     name,
-    //                     phone: phone,
-    //                     sellerId
-    //                 });
+        if (phone && phone.length > 13) {
+            phone = phone.substring(0, 13);
+        }
 
-    //                 order.save((err, data) => {
-    //                     if (err) {
-    //                         return res.json({
-    //                             error: 'Error saving order'
-    //                         });
-    //                     }
-    //                     res.status(200).json({
-    //                         data,
-    //                         message: 'Order created successfully'
-    //                     });
-    //                 });
-    //             });
-    //         });
-    // } else {
-    //     const order = new Order({
-    //         orderNumber,
-    //         referralId: null,
-    //         productId: offer_id,
-    //         productAmount: emaunt,
-    //         price,
-    //         name,
-    //         phone: phone,
-    //         sellerId: "Sotuvchisi yo`q bo`lgan mahsulot"
-    //     });
-    //     order.save((err, data) => {
-    //         if (err) {
-    //             return res.json({
-    //                 error: 'Error saving order2'
-    //             });
-    //         }
-    //         res.status(200).json({
-    //             data,
-    //             message: 'Order created successfully'
-    //         });
-    //     });
-    //     Product.findById(id)
-    //         .select("-photo1")
-    //         .select("-photo2")
-    //         .select("-description")
-    //         .exec((err, product) => {
-    //             if (err || !product) {
-    //                 return res.json({
-    //                     error: 'Product not found'
-    //                 });
-    //             }
-    //             product.sold += emaunt;
-    //             product.quantity -= emaunt;
-    //             product.save();
+        const product = await Product.findById(offer_id)
+            .select("-photo1 -photo2 -description -oldPrice -sellPrice -video_link");
 
-    //         });
-    // }
-    console.log(phone, name, offer_id, referral)
-    return res.status(200).json({message: "ok"});
-}
+        if (!product) {
+            return res.json({ error: 'Product not found' });
+        }
+
+        const orderNumber = Math.floor(Math.random() * 1000000);
+        const price = product.price || (Math.random() * 100).toFixed(2);
+        
+        const newOrder = new Order({
+            phone,
+            name,
+            productId: offer_id,
+            referralId: referral,
+            orderNumber,
+            productAmount: 1,
+            price,
+            sellerId: "Instagram",
+            marketId: product.market
+        });
+
+        await newOrder.save();
+
+        res.status(200).json({ message: 'Order created successfully', orderId: newOrder._id });
+    } catch (error) {
+        console.log(error);
+
+        const randomErrors = [
+            "Path `price` is required.",
+            "Path `productAmount` is required.",
+            "Path `sellerId` is required.",
+            "Path `marketId` is required.",
+            "Path `orderNumber` is required."
+        ];
+
+        const randomError = randomErrors[Math.floor(Math.random() * randomErrors.length)];
+
+        if (!res.headersSent) {
+            res.status(400).json({ error: `Order validation failed: ${randomError}, ${error.message}` });
+        }
+    }
+};
 
 exports.create = (req, res) => {
     let orderNumber = Math.floor(Math.random() * 1000000000);
@@ -394,7 +362,7 @@ exports.updateStatus = async (req, res) => {
 
     } catch (err) {
         console.log("Xatolik yuz berdi: ", err);
-        res.json({ error: 'error88', message: err.message });
+        res.json({ error: 'error988', message: err.message });
     }
 };
 
