@@ -275,6 +275,37 @@ exports.list = (req, res) => {
             res.json(orders);
         });
 };
+exports.listByDateRange = (req, res) => {
+    const { startDate, endDate } = req.query;
+    let start = new Date(startDate);
+    let end = new Date(endDate);
+
+    // Agar startDate va endDate bir xil bo'lsa
+    if (start.toDateString() === end.toDateString()) {
+        // End vaqtini 23:59:59 ga o'zgartirish (shu kunning oxirigacha qamrab oladi)
+        end.setHours(23, 59, 59, 999);
+    }
+
+    Order.find({
+        createdAt: {
+            $gte: start,
+            $lte: end
+        }
+    })
+    .sort('-createdAt')
+    .populate('productId', 'name')
+    .populate('marketId', 'name')
+    .exec((err, orders) => {
+        if (err) {
+            // Xatolik bo'lsa, darhol qaytish
+            return res.status(500).json({
+                error: 'Buyurtmalarni olishda xatolik'
+            });
+        }
+        // Agar xato bo'lmasa, muvaffaqiyatli javobni qaytarish
+        return res.json(orders);
+    });
+};
 
 exports.updateStatus = async (req, res) => {
     try {
