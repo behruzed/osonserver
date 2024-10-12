@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const { ObjectId } = mongoose.Schema;
 
-const orderScheme = new mongoose.Schema({
+const orderSchema = new mongoose.Schema({
     orderNumber: {
         type: Number,
         required: true,
@@ -15,6 +15,7 @@ const orderScheme = new mongoose.Schema({
     referralId: {
         type: ObjectId,
         ref: 'Referral',
+        required: false
     },
     productId: {
         type: ObjectId,
@@ -27,60 +28,70 @@ const orderScheme = new mongoose.Schema({
     },
     productAmount: {
         type: Number,
-        trim: true,
         required: true,
+        trim: true,
         maxlength: 32
     },
     price: {
         type: Number,
-        trim: true,
         required: true,
+        trim: true,
         maxlength: 32
     },
     name: {
         type: String,
-        trim: true,
-        required: true
+        required: true,
+        trim: true
     },
     region: {
         type: String,
-        trim: true,
         required: true,
+        trim: true,
         default: "Tanlanmagan"
     },
     operator: {
         type: String,
-        trim: true,
         required: true,
+        trim: true,
         default: "Tanlanmagan"
     },
     paid: {
         type: Boolean,
-        trim: true,
         required: true,
+        trim: true,
         default: false
     },
     oldPrice: {
         type: Number,
-        trim: true,
         required: false,
+        trim: true,
         default: 0
     },
     promo: {
         type: Boolean,
-        trim: true,
         required: false,
+        trim: true,
+        default: false // Yana default qiymat qo'shildi
     },
     phone: {
         type: String,
-        trim: true,
         required: true,
+        trim: true,
         maxlength: 13
     },
     status: {
         type: String,
         default: "Jarayonda",
-        enum: ["Buyurtma qabul qilindi", "Bekor qilindi",  "Jarayonda", "Jo'natilmoqda", "Jo'natildi", "To'landi", "Arxivlandi"]
+        enum: [
+            "Buyurtma qabul qilindi",
+            "Bekor qilindi",
+            "Jarayonda",
+            "Jo'natilmoqda",
+            "Jo'natildi",
+            "To'landi",
+            "Arxivlandi"
+        ]
     },
 }, { timestamps: true });
-module.exports = mongoose.model("Order", orderScheme);
+
+module.exports = mongoose.model("Order", orderSchema);

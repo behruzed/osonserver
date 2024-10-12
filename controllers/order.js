@@ -74,6 +74,9 @@ exports.create = (req, res) => {
     let orderNumber = Math.floor(Math.random() * 1000000000);
     const { id } = req.params;
     const { emaunt, price, oldPrice, promo, name, tel, marketId, referral } = req.body;
+    console.log('Yuborilgan ma\'lumotlar:', req.body); // req.body ning qiymatini konsolga chiqarish
+    // console.log(req.body); // req.body ni tekshirish uchun
+
     if (referral) {
         Referral.findById(referral)
             .exec((err, referralData) => {
@@ -107,7 +110,8 @@ exports.create = (req, res) => {
 
                     order.save((err, data) => {
                         if (err) {
-                            return res.json({
+                            console.error(err); // xatolikni konsolga chiqarish
+                            return res.status(500).json({
                                 error: 'Error saving order'
                             });
                         }
@@ -116,6 +120,7 @@ exports.create = (req, res) => {
                             message: 'Order created successfully'
                         });
                     });
+
                     Product.findById(id)
                         .select("-photo1")
                         .select("-photo2")
@@ -129,6 +134,7 @@ exports.create = (req, res) => {
                             product.sold += emaunt;
                             product.quantity -= emaunt;
                             product.save();
+                            
                             let media_group = [];
                             media_group.push({
                                 type: 'photo',
@@ -152,9 +158,11 @@ exports.create = (req, res) => {
             phone: tel,
             sellerId: "Sotuvchisi yo`q bo`lgan mahsulot"
         });
+
         order.save((err, data) => {
             if (err) {
-                return res.json({
+                console.error(err); // xatolikni konsolga chiqarish
+                return res.status(500).json({
                     error: 'Error saving order2'
                 });
             }
@@ -163,6 +171,7 @@ exports.create = (req, res) => {
                 message: 'Order created successfully'
             });
         });
+
         Product.findById(id)
             .select("-photo1")
             .select("-photo2")
