@@ -17,5 +17,6 @@ router.delete('/order/:id/:userId', requireSignin, isAuth, isAdmin, remove);
 
 
 router.param('userId', userById);
+// router.param('id', productId);
 
 module.exports = router;

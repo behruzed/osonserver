@@ -73,9 +73,10 @@ exports.metaOrder = async (req, res) => {
 exports.create = (req, res) => {
     let orderNumber = Math.floor(Math.random() * 1000000000);
     const { id } = req.params;
+    console.log(req.body, 654);
+    
     const { emaunt, price, oldPrice, promo, name, tel, marketId, referral } = req.body;
-    console.log('Yuborilgan ma\'lumotlar:', req.body); // req.body ning qiymatini konsolga chiqarish
-    // console.log(req.body); // req.body ni tekshirish uchun
+    console.log('Yuborilgan ma\'lumotlar:', req.body);
 
     if (referral) {
         Referral.findById(referral)
