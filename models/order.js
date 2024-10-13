@@ -15,7 +15,8 @@ const orderSchema = new mongoose.Schema({
     referralId: {
         type: ObjectId,
         ref: 'Referral',
-        required: false
+        required: false,
+        default: null
     },
     productId: {
         type: ObjectId,

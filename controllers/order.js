@@ -73,84 +73,92 @@ exports.metaOrder = async (req, res) => {
 exports.create = (req, res) => {
     let orderNumber = Math.floor(Math.random() * 1000000000);
     const { id } = req.params;
-    console.log(req.body, 654);
-    
-    const { emaunt, price, oldPrice, promo, name, tel, marketId, referralId } = req.body;
-    console.log('Yuborilgan ma\'lumotlar:', req.body);
 
-    if (referralId) {
-        Referral.findById(referralId)
+    const { emaunt, price, oldPrice, promo, name, tel, marketId, referralId } = req.body;
+
+    // referralId mavjud bo'lmasa, null qilib o'rnatamiz
+    let referralValue = referralId || null;
+
+    // Agar referralId mavjud bo'lsa, referral ma'lumotlarini olish
+    if (referralValue) {
+        Referral.findById(referralValue)
             .exec((err, referralData) => {
                 if (err || !referralData) {
-                    return res.json({
-                        error: 'Referral not found'
-                    });
-                }
-                referralData.watched += 1;
-                referralData.save((err) => {
-                    if (err) {
-                        return res.json({
-                            error: 'Error updating referral'
-                        });
-                    }
-                    const sellerId = referralData.seller || "Sotuvchisi yo`q bo`lgan mahsulot";
-
-                    const order = new Order({
-                        orderNumber,
-                        marketId,
-                        referralId: referralId || null,
-                        productId: id,
-                        productAmount: emaunt,
-                        price,
-                        promo,
-                        oldPrice,
-                        name,
-                        phone: tel,
-                        sellerId
-                    });
-
-                    order.save((err, data) => {
+                    referralValue = null; // referralData yo'q bo'lsa, referralni null qilamiz
+                } else {
+                    // referralData mavjud bo'lsa, watched maydonini yangilaymiz
+                    referralData.watched += 1;
+                    referralData.save((err) => {
                         if (err) {
-                            console.error(err); // xatolikni konsolga chiqarish
-                            return res.status(500).json({
-                                error: 'Error saving order'
+                            return res.json({
+                                error: 'Error updating referral'
                             });
                         }
-                        res.status(200).json({
-                            data,
-                            message: 'Order created successfully'
+                    });
+                }
+
+                // Sotuvchi ID ni referralData dan olish yoki mavjud emasligini tekshirish
+                const sellerId = referralData ? referralData.seller || "Sotuvchisi yo`q bo`lgan mahsulot" : "Sotuvchisi yo`q bo`lgan mahsulot";
+
+                // Order yaratish
+                const order = new Order({
+                    orderNumber,
+                    marketId,
+                    referralId: referralValue || null, // ReferralID mavjud bo'lsa saqlaymiz
+                    productId: id,
+                    productAmount: emaunt,
+                    price,
+                    promo,
+                    oldPrice,
+                    name,
+                    phone: tel,
+                    sellerId
+                });
+
+                order.save((err, data) => {
+                    if (err) {
+                        console.error(err); // Xatolikni konsolga chiqarish
+                        return res.status(500).json({
+                            error: 'Error saving order'
+                        });
+                    }
+                    res.status(200).json({
+                        data,
+                        message: 'Order created successfully'
+                    });
+                });
+
+                // Mahsulot yangilash
+                Product.findById(id)
+                    .select("-photo1")
+                    .select("-photo2")
+                    .select("-description")
+                    .exec((err, product) => {
+                        if (err || !product) {
+                            return res.json({
+                                error: 'Product not found'
+                            });
+                        }
+                        product.sold += emaunt;
+                        product.quantity -= emaunt;
+                        product.save();
+
+                        // Media group yaratish
+                        let media_group = [];
+                        media_group.push({
+                            type: 'photo',
+                            media: product.photo.data,
+                            caption: `<b>Buyurtma raqami ${orderNumber}</b>\n\n<b>🧾Mahsulot nomi:</b> ${product.name}\n<b>💰Narxi:</b> ${price} so'm\n<b>🔢Mahsulot soni:</b> ${emaunt}\n<b>👨Buyutmachi:</b> ${name}\n<b>☎️Tel:</b> ${tel}\n`,
+                            parse_mode: 'HTML'
                         });
                     });
-
-                    Product.findById(id)
-                        .select("-photo1")
-                        .select("-photo2")
-                        .select("-description")
-                        .exec((err, product) => {
-                            if (err || !product) {
-                                return res.json({
-                                    error: 'Product not found'
-                                });
-                            }
-                            product.sold += emaunt;
-                            product.quantity -= emaunt;
-                            product.save();
-                            
-                            let media_group = [];
-                            media_group.push({
-                                type: 'photo',
-                                media: product.photo.data,
-                                caption: `<b>Buyurtma raqami ${orderNumber}</b>\n\n<b>🧾Mahsulot nomi:</b> ${product.name}\n<b>💰Narxi:</b> ${price} so'm\n<b>🔢Mahsulot soni:</b> ${emaunt}\n<b>👨Buyutmachi:</b> ${name}\n<b>☎️Tel:</b> ${tel}\n`,
-                                parse_mode: 'HTML'
-                            });
-                        });
-                });
             });
     } else {
+        // ReferralId yo'q bo'lsa, null bo'lib yuboriladi
         const order = new Order({
             orderNumber,
             marketId,
-            referralId: referralId || null,
+            referralId: null,
             productId: id,
             promo,
             productAmount: emaunt,
@@ -162,9 +170,9 @@ exports.create = (req, res) => {
 
         order.save((err, data) => {
             if (err) {
-                console.error(err); // xatolikni konsolga chiqarish
+                console.error(err); // Xatolikni konsolga chiqarish
                 return res.status(500).json({
-                    error: 'Error saving order2'
+                    error: 'Error saving order'
                 });
             }
             res.status(200).json({
@@ -173,6 +181,7 @@ exports.create = (req, res) => {
             });
         });
 
+        // Mahsulotni yangilash
         Product.findById(id)
             .select("-photo1")
             .select("-photo2")
@@ -187,6 +196,7 @@ exports.create = (req, res) => {
                 product.quantity -= emaunt;
                 product.save();
 
+                // Media group yaratish
                 let media_group = [];
                 media_group.push({
                     type: 'photo',
