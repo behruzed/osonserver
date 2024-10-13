@@ -75,11 +75,11 @@ exports.create = (req, res) => {
     const { id } = req.params;
     console.log(req.body, 654);
     
-    const { emaunt, price, oldPrice, promo, name, tel, marketId, referral } = req.body;
+    const { emaunt, price, oldPrice, promo, name, tel, marketId, referralId } = req.body;
     console.log('Yuborilgan ma\'lumotlar:', req.body);
 
-    if (referral) {
-        Referral.findById(referral)
+    if (referralId) {
+        Referral.findById(referralId)
             .exec((err, referralData) => {
                 if (err || !referralData) {
                     return res.json({
@@ -98,7 +98,7 @@ exports.create = (req, res) => {
                     const order = new Order({
                         orderNumber,
                         marketId,
-                        referralId: referral,
+                        referralId: referralId || null,
                         productId: id,
                         productAmount: emaunt,
                         price,
@@ -150,7 +150,7 @@ exports.create = (req, res) => {
         const order = new Order({
             orderNumber,
             marketId,
-            referralId: null,
+            referralId: referralId || null,
             productId: id,
             promo,
             productAmount: emaunt,
