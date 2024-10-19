@@ -4,7 +4,7 @@ const { errorHandler } = require('../helpers/dbErrorHandler');
 exports.operatorById = (req, res, next, id) => {
     Operator.findById(id).exec((err, operator) => {
         if (err || !operator) {
-            return res.status(400).json({ error: 'Tizim sotuvchi akkauntini aniqlay olmadi1' });
+            return res.status(400).json({ error: 'Tizim operator akkauntini aniqlay olmadi1' });
         }
         req.operator = operator;
         next();

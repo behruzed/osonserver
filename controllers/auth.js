@@ -1,5 +1,6 @@
 const User = require('../models/user');
 const Seller = require('../models/seller')
+const Invites = require('../models/invites')
 const Operator = require('../models/operator')
 const jwt = require('jsonwebtoken'); // to generate signed token
 const expressJwt = require('express-jwt'); // for authorization check
@@ -7,10 +8,8 @@ const { errorHandler } = require('../helpers/dbErrorHandler');
 
 exports.signup = (req, res) => {
     const user = req.body;
-    
 
     if (user.role === 'admin') {
-        
         const admin = new User(user);
         admin.role = 1;
         admin.save((err, user) => {
@@ -39,7 +38,25 @@ exports.signup = (req, res) => {
             if (err) {
                 return res.status(400).json({ error: errorHandler(err) });
             }
-            res.json({ seller });
+
+            // Agar referralId bor bo'lsa, Invite modeliga ham saqlaymiz
+            if (user.referralId) {
+                const invite = new Invites({
+                    ownerId: user.referralId, // referralId ni ownerId sifatida saqlaymiz
+                    userId: seller._id,       // Yangi sellerning ID sini userId sifatida saqlaymiz
+                    paid: false               // default qiymati false
+                });
+
+                invite.save((err, invite) => {
+                    if (err) {
+                        return res.status(400).json({ error: errorHandler(err) });
+                    }
+                    console.log('Invite saqlandi:', invite);
+                    res.json({ seller, invite });
+                });
+            } else {
+                res.json({ seller });
+            }
         });
     }
 };
@@ -110,11 +127,13 @@ exports.requireSignin = expressJwt({
 });
 
 exports.isAuth = (req, res, next) => {
-    const profile = req.profile ? req.profile : req.seller;
+    const profile = req.profile ? req.profile : (req.seller ? req.seller : req.operator);
+    
     let user = profile && req.auth && profile._id == req.auth._id;
+    console.log(user);
     if (!user) {
         return res.status(403).json({
-            error: 'Access denied'
+            error: 'Access denied3'
         });
     }
     next();
@@ -123,7 +142,7 @@ exports.isAuth = (req, res, next) => {
 exports.isAdmin = (req, res, next) => {
     if (req.profile.role === 0) {
         return res.status(403).json({
-            error: 'Admin resourse! Access denied'
+            error: 'Admin resourse! Access denied1'
         });
     }
     next();

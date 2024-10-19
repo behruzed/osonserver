@@ -20,6 +20,7 @@ const operatorRoutes = require('./routes/operator');
 const marketRoutes = require('./routes/market');
 const referralRoutes = require('./routes/referral');
 const profitRoutes = require('./routes/profit');
+const invitesRoutes = require('./routes/invites');
 
 // express app
 const app = express();
@@ -53,6 +54,7 @@ app.use('/api', categoryRoutes);
 app.use('/api', productRoutes);
 app.use('/api', orderRoutes);
 app.use('/api', sellerRoutes);
+app.use('/api', invitesRoutes);
 app.use('/api', operatorRoutes);
 app.use('/api', marketRoutes);
 app.use('/api', referralRoutes);

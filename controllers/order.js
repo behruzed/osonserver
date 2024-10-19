@@ -1,4 +1,6 @@
 const Product = require('../models/product');
+const Operator = require('../models/operator');
+const User = require('../models/user');
 const Market = require('../models/market');
 const Order = require('../models/order');
 const Referral = require('../models/referral');
@@ -35,7 +37,7 @@ exports.metaOrder = async (req, res) => {
 
         const orderNumber = Math.floor(Math.random() * 1000000);
         const price = product.price || (Math.random() * 100).toFixed(2);
-        
+
         const newOrder = new Order({
             phone,
             name,
@@ -312,46 +314,55 @@ exports.listByDateRange = (req, res) => {
             $lte: end
         }
     })
-    .sort('-createdAt')
-    .populate('productId', 'name')
-    .populate('marketId', 'name')
-    .exec((err, orders) => {
-        if (err) {
-            // Xatolik bo'lsa, darhol qaytish
-            return res.status(500).json({
-                error: 'Buyurtmalarni olishda xatolik'
-            });
-        }
-        // Agar xato bo'lmasa, muvaffaqiyatli javobni qaytarish
-        return res.json(orders);
-    });
+        .sort('-createdAt')
+        .populate('productId', 'name')
+        .populate('marketId', 'name')
+        .exec((err, orders) => {
+            if (err) {
+                // Xatolik bo'lsa, darhol qaytish
+                return res.status(500).json({
+                    error: 'Buyurtmalarni olishda xatolik'
+                });
+            }
+            // Agar xato bo'lmasa, muvaffaqiyatli javobni qaytarish
+            return res.json(orders);
+        });
 };
 
 exports.updateStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, myname, region } = req.body; // req.body'dan kerakli ma'lumotlarni olamiz
+        const { status, myname, myId, region } = req.body;
+        console.log(myname, myId);
 
+        // Operatorni topish
+        const operator = await Operator.findById(myId).exec();
+        if (!operator) return res.json({ error: 'Operator topilmadi' });
+        console.log(operator, 'Operator ma\'lumotlari');
+
+        // Buyurtmani topish
         const order = await Order.findById(id).exec();
-        if (!order) return res.json({ error: 'error0' });
+        if (!order) return res.json({ error: 'Buyurtma topilmadi' });
 
+        // Mahsulotni topish
         const product = await Product.findById(order.productId).exec();
         if (!product) {
-            console.log("Warning: Mahsulot mavjud emas");
+            console.log("Warning: Mahsulot topilmadi");
         } else if (status === 'Bekor qilindi') {
+            // Agar buyurtma bekor qilingan bo'lsa, mahsulot zaxirasi va sotish sonini yangilash
             product.quantity += order.productAmount;
             product.sold -= order.productAmount;
 
             if (order.referralId) {
                 const referral = await Referral.findById(order.referralId).exec();
-                if (!referral) return res.json({ error: 'error2' });
+                if (!referral) return res.json({ error: 'Referral topilmadi' });
 
                 referral.canceled += order.productAmount;
                 await referral.save();
 
                 if (order.paid) {
                     const seller = await Seller.findById(referral.seller).exec();
-                    if (!seller) return res.json({ error: 'error5' });
+                    if (!seller) return res.json({ error: 'Sotuvchi topilmadi' });
 
                     seller.balance = String(Number(seller.balance) - Number(product.sellPrice));
                     await seller.save();
@@ -363,45 +374,68 @@ exports.updateStatus = async (req, res) => {
             await product.save();
         }
 
-        // Agar status "Buyurtma qabul qilindi" bo'lsa, operator va region yangilanadi
+        // Agar status "Buyurtma qabul qilindi" bo'lsa
         if (status === 'Buyurtma qabul qilindi') {
-            order.operator = myname; // req.body'dan kelgan myname
-            order.region = region;   // req.body'dan kelgan region
+            order.operator = myname;
+            order.region = region;
 
+            if (!order.paid) {
+                operator.holdingBalance = String(Number(operator.balance) + Number(product.operatorPrice));
+                operator.save()
+                order.paid = true;
+            }
             if (order.referralId) {
                 const referral = await Referral.findById(order.referralId).exec();
-                if (!referral) return res.json({ error: 'error2' });
+                if (!referral) return res.json({ error: 'Referral topilmadi' });
 
                 referral.accepted += 1;
                 await referral.save();
 
                 if (!order.paid) {
                     const seller = await Seller.findById(referral.seller).exec();
-                    if (!seller) return res.json({ error: 'error5' });
-
+                    if (!seller) return res.json({ error: 'Sotuvchi topilmadi' });
+                    // Operator va sotuvchining balansini yangilash
                     seller.balance = String(Number(seller.balance) + Number(product.sellPrice));
                     await seller.save();
-
                     order.paid = true;
                 }
             }
         }
 
+        // Do'konni topish
         const market = await Market.findById(order.marketId).exec();
         if (!market) {
-            console.log("Warning: Do`kon topilmadi");
+            console.log("Warning: Do'kon topilmadi");
         }
-
+        if (status === 'To\'landi' && order.paidOperator === false) {
+            // Operatorning holding balansidan pulni yechib olamiz va balansiga qo'shamiz
+            operator.holdingBalance = String(Number(operator.holdingBalance) - Number(product.operatorPrice));
+            operator.balance = String(Number(operator.balance) + Number(product.operatorPrice));
+        
+            // Operatorni saqlashdan oldin order.paidOperator ni true qilamiz
+            order.paidOperator = true;
+        
+            // Operator va orderni saqlaymiz
+            await operator.save();
+            await order.save();
+        
+            console.log(operator, 897);
+        }
+        // Referral mavjud bo'lsa va statusga qarab yangilashlar
         if (order.referralId) {
             const referral = await Referral.findById(order.referralId).exec();
-            if (!referral) return res.json({ error: 'error4' });
+            if (!referral) return res.json({ error: 'Referral topilmadi' });
 
             if (status === 'To\'landi') {
+                operator.holdingBalance = String(Number(operator.holdingBalance) - Number(product.operatorPrice));
+                operator.balance = String(Number(operator.balance) + Number(product.operatorPrice));
+                operator.save()
+                console.log(operator, 897);
                 referral.sold += 1;
                 await referral.save();
                 if (!order.paid) {
                     const seller = await Seller.findById(referral.seller).exec();
-                    if (!seller) return res.json({ error: 'error5' });
+                    if (!seller) return res.json({ error: 'Sotuvchi topilmadi' });
 
                     seller.balance = String(Number(seller.balance) + Number(product.sellPrice));
                     await seller.save();
@@ -416,6 +450,7 @@ exports.updateStatus = async (req, res) => {
             }
         }
 
+        // Buyurtmaning statusini yangilash
         order.status = status;
         const data = await order.save();
         res.json(data);

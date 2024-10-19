@@ -19,6 +19,12 @@ const productSchema = new mongoose.Schema({
         required: true,
         maxlength: 32
     },
+    operatorPrice: {
+        type: Number,
+        trim: true,
+        // required: true,
+        maxlength: 32
+    },
     oldPrice: {
         type: Number,
         trim: true,

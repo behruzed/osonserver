@@ -62,6 +62,12 @@ const orderSchema = new mongoose.Schema({
         trim: true,
         default: false
     },
+    paidOperator: {
+        type: Boolean,
+        required: true,
+        trim: true,
+        default: false
+    },
     oldPrice: {
         type: Number,
         required: false,

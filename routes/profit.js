@@ -4,13 +4,15 @@ const { updateProfitStatus } = require('../controllers/profit');
 
 const { requireSignin, isAuth, isAdmin } = require('../controllers/auth');
 
-const { profitById, read, update, list, remove, create, updateProfit, profitBySellerId, profitByOperatorId, getAllProfits, gettoken } = require('../controllers/profit');
+const { profitById, read, update, list, remove, create, createOperator, updateProfit, profitBySellerId, profitByOperatorId, getAllProfits, gettoken } = require('../controllers/profit');
 const { sellerById } = require('../controllers/seller');
 const { userById } = require('../controllers/user');
+const { operatorById } = require('../controllers/operator');
 router.get('/profit-by-user/:sellerId', profitBySellerId); 
-router.get('/profit-by-user/:operatorId', profitByOperatorId); 
+router.get('/profit-by-operator/:operatorId', profitByOperatorId); 
 router.get('/profit/:referralId', read);
 router.post('/profit/create/:sellerId', requireSignin, isAuth, create);
+router.post('/profit/create/operator/:operatorId', requireSignin, isAuth, createOperator);
 router.put('/profit/:profitId/:userId', requireSignin, isAuth, isAdmin, update);
 router.delete('/profit/:profitId/:userId', requireSignin, isAuth, isAdmin, remove);
 router.get('/profits', list, updateProfit, getAllProfits);
@@ -19,6 +21,7 @@ router.param('sellerId', sellerById);
 router.put('/profit/:profitId/status', requireSignin, isAuth, isAdmin, updateProfitStatus);
 router.get('/gettoken', gettoken);
 router.param('userId', userById);
+router.param('operatorId', operatorById);
 router.param('profitId', profitById);
 router.put('/updateProfit/:prId', requireSignin, isAuth, isAdmin, (req, res) => {
     const { prId } = req.params;

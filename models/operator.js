@@ -29,6 +29,11 @@ const operatorSchema = new mongoose.Schema({
         type: Number,
         default: 2
     },
+    holdingBalance: {
+        type: String,
+        trim: true,
+        default: 0
+    },
     balance: {
         type: String,
         trim: true,

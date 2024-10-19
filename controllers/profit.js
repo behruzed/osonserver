@@ -1,5 +1,6 @@
 const Profit = require("../models/profit");
 const Seller = require("../models/seller");
+const Operator = require("../models/operator");
 const { errorHandler } = require("../helpers/dbErrorHandler");
 const jwt = require('jsonwebtoken'); // Agar JWT ishlatayotgan bo'lsangiz
 
@@ -68,10 +69,10 @@ exports.profitBySellerId = (req, res) => {
     });
 }
 exports.profitByOperatorId = (req, res) => {
-    console.log(1);
+    console.log(12, req.operator);
     
-    const seller = req.seller;
-    Profit.find({ operatorId: operator._id }).exec((err, data) => {
+    const operator = req.operator;
+    Profit.find({ sellerId: operator._id }).exec((err, data) => {
         if (err) {
             return res.status(400).json({ error: errorHandler(err) });
         }
@@ -89,6 +90,7 @@ exports.create = (req, res) => {
         return res.status(400).json({ error: "Hisobda yetarli mablag' yo'q" });
     } else {
         profit.save((err, data) => {
+            
             if (err) {
                 return res.status(400).json({ error: "cannot create" });
             }
@@ -98,13 +100,42 @@ exports.create = (req, res) => {
                     return res.status(400).json({ error: "cannot create" });
                 }
                 res.json({ data });
+                console.log(err, data, 9999999);
             }
 
             );
         });
     }
 };
+exports.createOperator = (req, res) => {    
+    const profit = new Profit(req.body);
+    
+    const operator = new Operator(req.operator);
+    console.log(req.operator);
+    if (parseInt(profit.cardNumber.length) !== 16) {
+        return res.status(400).json({ error: "Karta raqami 16 xonali bo'lishi kerak" });
+    }
+    if (Number(operator.balance) < Number(profit.price)) {
+        return res.status(400).json({ error: "Hisobda yetarli mablag' yo'q" });
+    } else {
+        profit.save((err, data) => {
+            console.log(err, data, 9999999);
+            
+            if (err) {
+                return res.status(400).json({ error: "cannot create1" });
+            }
+            operator.balance = operator.balance - profit.price;
+            operator.save((err, data) => {
+                if (err) {
+                    return res.status(400).json({ error: "cannot create2" });
+                }
+                res.json({ data });
+            }
 
+            );
+        });
+    }
+};
 exports.read = (req, res) => {
     return res.json(req.profit);
 };
