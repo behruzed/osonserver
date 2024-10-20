@@ -333,7 +333,6 @@ exports.updateStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { status, myname, myId, region } = req.body;
-        console.log(myname, myId);
 
         // Operator yoki Userni topish
         let operatorOrUser = await Operator.findById(myId).exec();
@@ -344,9 +343,6 @@ exports.updateStatus = async (req, res) => {
         if (!operatorOrUser) {
             return res.json({ error: 'Operator yoki User topilmadi' });
         }
-
-        console.log(operatorOrUser, 'Operator yoki User ma\'lumotlari');
-
         const order = await Order.findById(id).exec();
         if (!order) return res.json({ error: 'Buyurtma topilmadi' });
 
@@ -440,10 +436,10 @@ exports.updateStatus = async (req, res) => {
                 await referral.save();
 
                 const seller = await Seller.findById(referral.seller).exec();
-                if (seller) {
+                if (seller & seller.holdingBalance<0) {
                     seller.balance = String(Number(seller.balance) + Number(product.sellPrice));
                     seller.holdingBalance = String(Number(seller.holdingBalance) - Number(product.sellPrice));
-                    seller.soldProduct = String(Number(seller.soldProduct) + Number(seller.amount));
+                    seller.soldProduct = String(Number(seller.soldProduct) + Number(order.productAmount));                    
                     await seller.save();
                 }
                 order.paid = "Tolandi";

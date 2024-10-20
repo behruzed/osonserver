@@ -57,9 +57,7 @@ exports.updateProfit = (req, res, prId) => {
     
     return res.json(req.profit);
 };
-exports.profitBySellerId = (req, res) => {
-    console.log(12);
-    
+exports.profitBySellerId = (req, res) => {    
     const seller = req.seller;
     Profit.find({ sellerId: seller._id }).exec((err, data) => {
         if (err) {
@@ -68,9 +66,7 @@ exports.profitBySellerId = (req, res) => {
         res.json(data);
     });
 }
-exports.profitByOperatorId = (req, res) => {
-    console.log(12, req.operator);
-    
+exports.profitByOperatorId = (req, res) => {    
     const operator = req.operator;
     Profit.find({ sellerId: operator._id }).exec((err, data) => {
         if (err) {
@@ -100,7 +96,6 @@ exports.create = (req, res) => {
                     return res.status(400).json({ error: "cannot create" });
                 }
                 res.json({ data });
-                console.log(err, data, 9999999);
             }
 
             );
@@ -111,7 +106,6 @@ exports.createOperator = (req, res) => {
     const profit = new Profit(req.body);
     
     const operator = new Operator(req.operator);
-    console.log(req.operator);
     if (parseInt(profit.cardNumber.length) !== 16) {
         return res.status(400).json({ error: "Karta raqami 16 xonali bo'lishi kerak" });
     }
@@ -119,7 +113,6 @@ exports.createOperator = (req, res) => {
         return res.status(400).json({ error: "Hisobda yetarli mablag' yo'q" });
     } else {
         profit.save((err, data) => {
-            console.log(err, data, 9999999);
             
             if (err) {
                 return res.status(400).json({ error: "cannot create1" });

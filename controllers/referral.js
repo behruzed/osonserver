@@ -17,9 +17,7 @@ exports.create = (req, res) => {
     const referral = new Referral(req.body);
     referral.save((err, data) => {
         if (err) {
-            console.error("Error details:", err, data);
-            console.log(res.status);
-            
+            console.error("Error details:", err, data);            
             if (err.code === 11000) {
                 return res.status(400).json({ error: 'Referralni yaratib bo`lmadi, ehtimol productId yoki boshqa qiymat takrorlanmoqda' });
             }
