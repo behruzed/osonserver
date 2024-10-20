@@ -333,112 +333,131 @@ exports.updateStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { status, myname, myId, region } = req.body;
+        console.log(myname, myId);
 
         // Operator yoki Userni topish
-        let operatorOrUser = await Operator.findById(myId).exec() || await User.findById(myId).exec();
-        if (!operatorOrUser) return res.json({ error: 'Operator yoki User topilmadi' });
+        let operatorOrUser = await Operator.findById(myId).exec();
+        if (!operatorOrUser) {
+            operatorOrUser = await User.findById(myId).exec();
+        }
+
+        if (!operatorOrUser) {
+            return res.json({ error: 'Operator yoki User topilmadi' });
+        }
+
+        console.log(operatorOrUser, 'Operator yoki User ma\'lumotlari');
 
         const order = await Order.findById(id).exec();
         if (!order) return res.json({ error: 'Buyurtma topilmadi' });
 
         const product = await Product.findById(order.productId).exec();
-        if (!product) return res.json({ error: 'Mahsulot topilmadi' });
-
-        const referral = order.referralId ? await Referral.findById(order.referralId).exec() : null;
-        const seller = referral ? await Seller.findById(referral.seller).exec() : null;
-
-        // Status "Bekor qilindi" uchun
-        if (status === 'Bekor qilindi') {
+        if (!product) {
+            console.log("Warning: Mahsulot topilmadi");
+        } else if (status === 'Bekor qilindi') {
             product.quantity += order.productAmount;
             product.sold -= order.productAmount;
-            
-            if (order.paid === "Holding") {
-                if (order.paidOperator === "Holding") {
-                    operatorOrUser.holdingBalance -= product.operatorPrice;
-                }
-                order.paidOperator = "Yoq";
-                await operatorOrUser.save();
-            }
-            
-            if (seller && order.paid === "Holding") {
-                seller.holdingBalance -= product.sellPrice;
-                await seller.save();
-            }
+            if (order.referralId) {
+                const referral = await Referral.findById(order.referralId).exec();
+                if (!referral) return res.json({ error: 'Referral topilmadi' });
 
-            if (referral) {
                 referral.canceled += order.productAmount;
                 await referral.save();
             }
+            
+            if (order.paidOperator === "Tolandi") {
+                operatorOrUser.balance = String(Number(operatorOrUser.balance) - Number(product.operatorPrice));
+                order.paidOperator = "Yoq";
+                await operatorOrUser.save();
+                await order.save();
+            }
 
-            order.paid = "Yoq";
+            if (order.paidOperator === "Holding") {
+                operatorOrUser.holdingBalance = String(Number(operatorOrUser.holdingBalance) - Number(product.operatorPrice));
+                order.paidOperator = "Yoq";
+                await operatorOrUser.save();
+                await order.save();
+            }
+            if (order.referralId) {
+                const referral = await Referral.findById(order.referralId).exec();
+                const seller = await Seller.findById(referral.seller).exec();
+                if (seller) {
+                    if (order.paid === "Tolandi") {
+                        seller.balance = String(Number(seller.balance) - Number(product.sellPrice));
+                        await seller.save();
+                    }
+        
+                    if (order.paid === "Holding") {
+                        seller.holdingBalance = String(Number(seller.holdingBalance) - Number(product.sellPrice));
+                        await seller.save();
+                    }
+                }
+                order.paid = "Yoq";
+            }
             await product.save();
-            await order.save();
         }
 
-        // Status "Buyurtma qabul qilindi" uchun
         if (status === 'Buyurtma qabul qilindi') {
             order.operator = myname;
             order.region = region;
 
-            if (order.paid === "Yoq") {
-                operatorOrUser.holdingBalance = (operatorOrUser.holdingBalance || 0) + product.operatorPrice;
-                await operatorOrUser.save();
-
-                if (seller) {
-                    seller.holdingBalance = (seller.holdingBalance || 0) + product.sellPrice;
-                    await seller.save();
-                }
-
-                order.paid = "Holding";
-            }
-
-            if (referral) {
+            const referral = await Referral.findById(order.referralId).exec();
+            if (order.referralId && referral) {
                 referral.confirmed += order.productAmount;
                 await referral.save();
             }
-            
-            await order.save();
-        }
 
-        // Status "To'landi" uchun
-        if (status === 'To\'landi') {
-            if (order.paidOperator === "Holding") {
-                operatorOrUser.holdingBalance -= product.operatorPrice;
-                operatorOrUser.balance += product.operatorPrice;
-                order.paidOperator = "Tolandi";
+            if (order.paid === "Yoq") {
+                if (referral) {
+                    const seller = await Seller.findById(referral.seller).exec();
+                    if (seller) {
+                        seller.holdingBalance = String(Number(seller.holdingBalance) + Number(product.sellPrice));
+                        await seller.save();
+                    }
+                }
+
+                operatorOrUser.holdingBalance = String(Number(operatorOrUser.holdingBalance || 0) + Number(product.operatorPrice));
                 await operatorOrUser.save();
+                order.paid = "Holding";
+                order.paidOperator = "Holding";
+                await order.save();
             }
+        }
 
-            if (seller && order.paid === "Holding") {
-                seller.holdingBalance -= product.sellPrice;
-                seller.balance += product.sellPrice;
-                order.paid = "Tolandi";
-                await seller.save();
-            }
-
+        if (status === 'To\'landi' && order.paidOperator === "Holding") {
+            operatorOrUser.holdingBalance = String(Number(operatorOrUser.holdingBalance) - Number(product.operatorPrice));
+            operatorOrUser.balance = String(Number(operatorOrUser.balance) + Number(product.operatorPrice));
+            order.paidOperator = "Tolandi";
+            await operatorOrUser.save();
             await order.save();
         }
 
-        // Referral bo'yicha yangilanishlar
-        if (referral) {
-            if (status === 'Jo\'natilmoqda') {
-                referral.delivering += order.productAmount;
-            } else if (status === 'Jo\'natildi') {
-                referral.delivered += order.productAmount;
-            } else if (status === 'Arxivlandi') {
-                referral.archived += order.productAmount;
-            } else if (status === 'To\'landi') {
+        if (order.referralId) {
+            const referral = await Referral.findById(order.referralId).exec();
+            if (!referral) return res.json({ error: 'Referral topilmadi' });
+
+            if (status === 'To\'landi') {
                 referral.sold += order.productAmount;
+                await referral.save();
+
+                const seller = await Seller.findById(referral.seller).exec();
+                if (seller) {
+                    seller.balance = String(Number(seller.balance) + Number(product.sellPrice));
+                    seller.holdingBalance = String(Number(seller.holdingBalance) - Number(product.sellPrice));
+                    seller.soldProduct = String(Number(seller.soldProduct) + Number(seller.amount));
+                    await seller.save();
+                }
+                order.paid = "Tolandi";
+                await order.save();
             }
-            await referral.save();
         }
 
         order.status = status;
         const data = await order.save();
         res.json(data);
+
     } catch (err) {
         console.log("Xatolik yuz berdi: ", err);
-        res.json({ error: 'Xatolik', message: err.message });
+        res.json({ error: 'error988', message: err.message });
     }
 };
 
