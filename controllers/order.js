@@ -361,14 +361,14 @@ exports.updateStatus = async (req, res) => {
             }
             
             if (order.paidOperator === "Tolandi") {
-                operatorOrUser.balance = String(Number(operatorOrUser.balance) - Number(product.operatorPrice));
+                operatorOrUser.balance = String(Number(operatorOrUser.balance) - Number(product.operatorPrice*order.productAmount));
                 order.paidOperator = "Yoq";
                 await operatorOrUser.save();
                 await order.save();
             }
 
             if (order.paidOperator === "Holding") {
-                operatorOrUser.holdingBalance = String(Number(operatorOrUser.holdingBalance) - Number(product.operatorPrice));
+                operatorOrUser.holdingBalance = String(Number(operatorOrUser.holdingBalance) - Number(product.operatorPrice*order.productAmount));
                 order.paidOperator = "Yoq";
                 await operatorOrUser.save();
                 await order.save();
@@ -411,7 +411,7 @@ exports.updateStatus = async (req, res) => {
                     }
                 }
 
-                operatorOrUser.holdingBalance = String(Number(operatorOrUser.holdingBalance || 0) + Number(product.operatorPrice));
+                operatorOrUser.holdingBalance = String(Number(operatorOrUser.holdingBalance || 0) + Number(product.operatorPrice*order.productAmount));
                 await operatorOrUser.save();
                 order.paid = "Holding";
                 order.paidOperator = "Holding";
@@ -420,8 +420,8 @@ exports.updateStatus = async (req, res) => {
         }
 
         if (status === 'To\'landi' && order.paidOperator === "Holding") {
-            operatorOrUser.holdingBalance = String(Number(operatorOrUser.holdingBalance) - Number(product.operatorPrice));
-            operatorOrUser.balance = String(Number(operatorOrUser.balance) + Number(product.operatorPrice));
+            operatorOrUser.holdingBalance = String(Number(operatorOrUser.holdingBalance) - Number(product.operatorPrice*order.productAmount));
+            operatorOrUser.balance = String(Number(operatorOrUser.balance) + Number(product.operatorPrice*order.productAmount));
             order.paidOperator = "Tolandi";
             await operatorOrUser.save();
             await order.save();
@@ -436,10 +436,10 @@ exports.updateStatus = async (req, res) => {
                 await referral.save();
 
                 const seller = await Seller.findById(referral.seller).exec();
-                if (seller & seller.holdingBalance>=0) {
-                    seller.balance = String(Number(seller.balance) + Number(product.sellPrice*order.productAmount));
-                    seller.holdingBalance = String(Number(seller.holdingBalance) - Number(product.sellPrice*order.productAmount));
-                    seller.soldProduct = String(Number(seller.soldProduct) + Number(order.productAmount));                    
+                if (seller && seller.holdingBalance >= 1) {
+                    seller.balance = String(Number(seller.balance) + Number(product.sellPrice * order.productAmount));
+                    seller.holdingBalance = String(Number(seller.holdingBalance) - Number(product.sellPrice * order.productAmount));
+                    seller.soldProduct = String(Number(seller.soldProduct) + Number(order.productAmount));
                     await seller.save();
                 }
                 order.paid = "Tolandi";
