@@ -436,7 +436,7 @@ exports.updateStatus = async (req, res) => {
                 await referral.save();
 
                 const seller = await Seller.findById(referral.seller).exec();
-                if (seller & seller.holdingBalance<=0) {
+                if (seller & seller.holdingBalance>=0) {
                     seller.balance = String(Number(seller.balance) + Number(product.sellPrice*order.productAmount));
                     seller.holdingBalance = String(Number(seller.holdingBalance) - Number(product.sellPrice*order.productAmount));
                     seller.soldProduct = String(Number(seller.soldProduct) + Number(order.productAmount));                    
