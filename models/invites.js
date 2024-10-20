@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+mongoose.set('useFindAndModify', false);
+
 const { ObjectId } = mongoose.Schema;
 
 const invitesSchema = new mongoose.Schema({

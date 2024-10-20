@@ -57,16 +57,16 @@ const orderSchema = new mongoose.Schema({
         default: "Tanlanmagan"
     },
     paid: {
-        type: Boolean,
+        type: String,
         required: true,
         trim: true,
-        default: false
+        default: "Yoq"
     },
     paidOperator: {
-        type: Boolean,
+        type: String,
         required: true,
         trim: true,
-        default: false
+        default: "Yoq"
     },
     oldPrice: {
         type: Number,

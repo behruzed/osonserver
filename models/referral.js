@@ -36,11 +36,11 @@ const referralSchema = new mongoose.Schema({
         unique: false,
         required: true
     },
-    watched: {
+    sold: {
         type: Number,
         default: 0
     },
-    sold: {
+    processing: {
         type: Number,
         default: 0
     },
@@ -49,6 +49,14 @@ const referralSchema = new mongoose.Schema({
         default: 0
     },
     delivered: {
+        type: Number,
+        default: 0
+    },
+    delivering: {
+        type: Number,
+        default: 0
+    },
+    archived: {
         type: Number,
         default: 0
     },

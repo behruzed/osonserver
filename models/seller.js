@@ -19,9 +19,15 @@ const sellerSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    holdingBalance: {
+        type: String,
+        trim: true,
+        default: 0
+    },
     balance: {
         type: String,
-        trim: true
+        trim: true,
+        default: 0
     },
     soldProduct: {
         type: String,

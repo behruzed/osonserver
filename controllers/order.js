@@ -89,7 +89,7 @@ exports.create = (req, res) => {
                     referralValue = null; // referralData yo'q bo'lsa, referralni null qilamiz
                 } else {
                     // referralData mavjud bo'lsa, watched maydonini yangilaymiz
-                    referralData.watched += 1;
+                    referralData.processing += emaunt;
                     referralData.save((err) => {
                         if (err) {
                             return res.json({
@@ -333,131 +333,112 @@ exports.updateStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { status, myname, myId, region } = req.body;
-        console.log(myname, myId);
 
-        // Operatorni topish
-        const operator = await Operator.findById(myId).exec();
-        if (!operator) return res.json({ error: 'Operator topilmadi' });
-        console.log(operator, 'Operator ma\'lumotlari');
+        // Operator yoki Userni topish
+        let operatorOrUser = await Operator.findById(myId).exec() || await User.findById(myId).exec();
+        if (!operatorOrUser) return res.json({ error: 'Operator yoki User topilmadi' });
 
-        // Buyurtmani topish
         const order = await Order.findById(id).exec();
         if (!order) return res.json({ error: 'Buyurtma topilmadi' });
 
-        // Mahsulotni topish
         const product = await Product.findById(order.productId).exec();
-        if (!product) {
-            console.log("Warning: Mahsulot topilmadi");
-        } else if (status === 'Bekor qilindi') {
-            // Agar buyurtma bekor qilingan bo'lsa, mahsulot zaxirasi va sotish sonini yangilash
+        if (!product) return res.json({ error: 'Mahsulot topilmadi' });
+
+        const referral = order.referralId ? await Referral.findById(order.referralId).exec() : null;
+        const seller = referral ? await Seller.findById(referral.seller).exec() : null;
+
+        // Status "Bekor qilindi" uchun
+        if (status === 'Bekor qilindi') {
             product.quantity += order.productAmount;
             product.sold -= order.productAmount;
-
-            if (order.referralId) {
-                const referral = await Referral.findById(order.referralId).exec();
-                if (!referral) return res.json({ error: 'Referral topilmadi' });
-
-                referral.canceled += order.productAmount;
-                await referral.save();
-
-                if (order.paid) {
-                    const seller = await Seller.findById(referral.seller).exec();
-                    if (!seller) return res.json({ error: 'Sotuvchi topilmadi' });
-
-                    seller.balance = String(Number(seller.balance) - Number(product.sellPrice));
-                    await seller.save();
-
-                    order.paid = false;
+            
+            if (order.paid === "Holding") {
+                if (order.paidOperator === "Holding") {
+                    operatorOrUser.holdingBalance -= product.operatorPrice;
                 }
+                order.paidOperator = "Yoq";
+                await operatorOrUser.save();
+            }
+            
+            if (seller && order.paid === "Holding") {
+                seller.holdingBalance -= product.sellPrice;
+                await seller.save();
             }
 
+            if (referral) {
+                referral.canceled += order.productAmount;
+                await referral.save();
+            }
+
+            order.paid = "Yoq";
             await product.save();
+            await order.save();
         }
 
-        // Agar status "Buyurtma qabul qilindi" bo'lsa
+        // Status "Buyurtma qabul qilindi" uchun
         if (status === 'Buyurtma qabul qilindi') {
             order.operator = myname;
             order.region = region;
 
-            if (!order.paid) {
-                operator.holdingBalance = String(Number(operator.balance) + Number(product.operatorPrice));
-                operator.save()
-                order.paid = true;
-            }
-            if (order.referralId) {
-                const referral = await Referral.findById(order.referralId).exec();
-                if (!referral) return res.json({ error: 'Referral topilmadi' });
+            if (order.paid === "Yoq") {
+                operatorOrUser.holdingBalance = (operatorOrUser.holdingBalance || 0) + product.operatorPrice;
+                await operatorOrUser.save();
 
-                referral.accepted += 1;
-                await referral.save();
-
-                if (!order.paid) {
-                    const seller = await Seller.findById(referral.seller).exec();
-                    if (!seller) return res.json({ error: 'Sotuvchi topilmadi' });
-                    // Operator va sotuvchining balansini yangilash
-                    seller.balance = String(Number(seller.balance) + Number(product.sellPrice));
+                if (seller) {
+                    seller.holdingBalance = (seller.holdingBalance || 0) + product.sellPrice;
                     await seller.save();
-                    order.paid = true;
                 }
-            }
-        }
 
-        // Do'konni topish
-        const market = await Market.findById(order.marketId).exec();
-        if (!market) {
-            console.log("Warning: Do'kon topilmadi");
-        }
-        if (status === 'To\'landi' && order.paidOperator === false) {
-            // Operatorning holding balansidan pulni yechib olamiz va balansiga qo'shamiz
-            operator.holdingBalance = String(Number(operator.holdingBalance) - Number(product.operatorPrice));
-            operator.balance = String(Number(operator.balance) + Number(product.operatorPrice));
-        
-            // Operatorni saqlashdan oldin order.paidOperator ni true qilamiz
-            order.paidOperator = true;
-        
-            // Operator va orderni saqlaymiz
-            await operator.save();
+                order.paid = "Holding";
+            }
+
+            if (referral) {
+                referral.confirmed += order.productAmount;
+                await referral.save();
+            }
+            
             await order.save();
-        
-            console.log(operator, 897);
-        }
-        // Referral mavjud bo'lsa va statusga qarab yangilashlar
-        if (order.referralId) {
-            const referral = await Referral.findById(order.referralId).exec();
-            if (!referral) return res.json({ error: 'Referral topilmadi' });
-
-            if (status === 'To\'landi') {
-                operator.holdingBalance = String(Number(operator.holdingBalance) - Number(product.operatorPrice));
-                operator.balance = String(Number(operator.balance) + Number(product.operatorPrice));
-                operator.save()
-                console.log(operator, 897);
-                referral.sold += 1;
-                await referral.save();
-                if (!order.paid) {
-                    const seller = await Seller.findById(referral.seller).exec();
-                    if (!seller) return res.json({ error: 'Sotuvchi topilmadi' });
-
-                    seller.balance = String(Number(seller.balance) + Number(product.sellPrice));
-                    await seller.save();
-
-                    order.paid = true;
-                }
-            }
-
-            if (status === 'Yetkazilmoqda') {
-                referral.delivered += 1;
-                await referral.save();
-            }
         }
 
-        // Buyurtmaning statusini yangilash
+        // Status "To'landi" uchun
+        if (status === 'To\'landi') {
+            if (order.paidOperator === "Holding") {
+                operatorOrUser.holdingBalance -= product.operatorPrice;
+                operatorOrUser.balance += product.operatorPrice;
+                order.paidOperator = "Tolandi";
+                await operatorOrUser.save();
+            }
+
+            if (seller && order.paid === "Holding") {
+                seller.holdingBalance -= product.sellPrice;
+                seller.balance += product.sellPrice;
+                order.paid = "Tolandi";
+                await seller.save();
+            }
+
+            await order.save();
+        }
+
+        // Referral bo'yicha yangilanishlar
+        if (referral) {
+            if (status === 'Jo\'natilmoqda') {
+                referral.delivering += order.productAmount;
+            } else if (status === 'Jo\'natildi') {
+                referral.delivered += order.productAmount;
+            } else if (status === 'Arxivlandi') {
+                referral.archived += order.productAmount;
+            } else if (status === 'To\'landi') {
+                referral.sold += order.productAmount;
+            }
+            await referral.save();
+        }
+
         order.status = status;
         const data = await order.save();
         res.json(data);
-
     } catch (err) {
         console.log("Xatolik yuz berdi: ", err);
-        res.json({ error: 'error988', message: err.message });
+        res.json({ error: 'Xatolik', message: err.message });
     }
 };
 

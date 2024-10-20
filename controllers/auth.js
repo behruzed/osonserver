@@ -130,7 +130,6 @@ exports.isAuth = (req, res, next) => {
     const profile = req.profile ? req.profile : (req.seller ? req.seller : req.operator);
     
     let user = profile && req.auth && profile._id == req.auth._id;
-    console.log(user);
     if (!user) {
         return res.status(403).json({
             error: 'Access denied3'
