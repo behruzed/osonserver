@@ -378,12 +378,12 @@ exports.updateStatus = async (req, res) => {
                 const seller = await Seller.findById(referral.seller).exec();
                 if (seller) {
                     if (order.paid === "Tolandi") {
-                        seller.balance = String(Number(seller.balance) - Number(product.sellPrice));
+                        seller.balance = String(Number(seller.balance) - Number(product.sellPrice*order.productAmount));
                         await seller.save();
                     }
         
                     if (order.paid === "Holding") {
-                        seller.holdingBalance = String(Number(seller.holdingBalance) - Number(product.sellPrice));
+                        seller.holdingBalance = String(Number(seller.holdingBalance) - Number(product.sellPrice*order.productAmount));
                         await seller.save();
                     }
                 }
@@ -406,7 +406,7 @@ exports.updateStatus = async (req, res) => {
                 if (referral) {
                     const seller = await Seller.findById(referral.seller).exec();
                     if (seller) {
-                        seller.holdingBalance = String(Number(seller.holdingBalance) + Number(product.sellPrice));
+                        seller.holdingBalance = String(Number(seller.holdingBalance) + Number(product.sellPrice*order.productAmount));
                         await seller.save();
                     }
                 }
@@ -437,8 +437,8 @@ exports.updateStatus = async (req, res) => {
 
                 const seller = await Seller.findById(referral.seller).exec();
                 if (seller & seller.holdingBalance<=0) {
-                    seller.balance = String(Number(seller.balance) + Number(product.sellPrice));
-                    seller.holdingBalance = String(Number(seller.holdingBalance) - Number(product.sellPrice));
+                    seller.balance = String(Number(seller.balance) + Number(product.sellPrice*order.productAmount));
+                    seller.holdingBalance = String(Number(seller.holdingBalance) - Number(product.sellPrice*order.productAmount));
                     seller.soldProduct = String(Number(seller.soldProduct) + Number(order.productAmount));                    
                     await seller.save();
                 }
