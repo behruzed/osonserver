@@ -50,6 +50,9 @@ const orderSchema = new mongoose.Schema({
         trim: true,
         default: "Tanlanmagan"
     },
+    comment: {
+        type: String,
+    },
     operator: {
         type: String,
         required: true,

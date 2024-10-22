@@ -332,7 +332,8 @@ exports.listByDateRange = (req, res) => {
 exports.updateStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, myname, myId, region } = req.body;
+        const { status, myname, myId, region, comment } = req.body;
+        
 
         // Operator yoki Userni topish
         let operatorOrUser = await Operator.findById(myId).exec();
@@ -446,14 +447,14 @@ exports.updateStatus = async (req, res) => {
                 await order.save();
             }
         }
-
+        order.comment = comment || " ";
         order.status = status;
         const data = await order.save();
         res.json(data);
 
     } catch (err) {
         console.log("Xatolik yuz berdi: ", err);
-        res.json({ error: 'error988', message: err.message });
+        res.json({ error: 'error9000', message: err.message });
     }
 };
 
