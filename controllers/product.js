@@ -166,17 +166,15 @@ exports.update = (req, res) => {
 exports.list = (req, res) => {    
     let order = req.query.order ? req.query.order : 'asc';
     let sortBy = req.query.sortBy ? req.query.sortBy : '_id';
-    let limit = req.query.limit ? parseInt(req.query.limit) : 6;
+    let limit = req.query.limit ? parseInt(req.query.limit) : 16;  // Dastlabki limitni 16 ga o'zgartirdik
+    let skip = req.query.skip ? parseInt(req.query.skip) : 0;      // Foydalanuvchi necha mahsulotni o'tkazib yuborganini kuzatish uchun
 
     Product.find()
-        .select('name')
-        .select('oldPrice')
-        .select('quantity')
-        .select('_id')
-        .select('price')
+        .select('name oldPrice quantity _id price')
         .populate('market', '_id name')
         .sort([[sortBy, order]])
-        .limit(limit)
+        .skip(skip)   // Mahsulotlarni o'tkazib yuborishni kuzatish
+        .limit(limit) // Limit bo'yicha mahsulotlar sonini cheklash
         .exec((err, products) => {
             if (err) {
                 return res.status(400).json({ error: 'Products not found' });
