@@ -29,6 +29,11 @@ const sellerSchema = new mongoose.Schema({
         trim: true,
         default: 0
     },
+    coin: {
+        type: Number,
+        trim: true,
+        default: 0
+    },
     soldProduct: {
         type: String,
         trim: true

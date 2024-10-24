@@ -53,6 +53,11 @@ const productSchema = new mongoose.Schema({
         required: true,
         maxlength: 32
     },
+    coin: {
+        type: Number,
+        trim: true,
+        required: true,
+    },
     video_link: {
         type: String,
         trim: true,
